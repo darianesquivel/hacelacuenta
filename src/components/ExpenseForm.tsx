@@ -24,6 +24,9 @@ const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number | "">("");
   const [paidByEmail, setPaidByEmail] = useState(currentUser?.email || "");
+
+  console.log("paidByEmail", paidByEmail);
+
   const [formError, setFormError] = useState<string | null>(null);
 
   const { mutate: addExpenseMutate, isPending } = useMutation({
@@ -57,7 +60,6 @@ const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
       return;
     }
 
-    // 1. Encontrar el objeto UserReference del que pagó (para paidBy)
     const paidByUserRef = {
       uid: currentUser.uid,
       displayName: currentUser.displayName,
@@ -76,7 +78,7 @@ const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
       eventId,
       description: description.trim(),
       amount: amount as number,
-      paidBy: currentUser,
+      paidBy: paidByUserRef,
       sharedWith: sharedWithRefs,
     });
   };

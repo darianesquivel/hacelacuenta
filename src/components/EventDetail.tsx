@@ -27,6 +27,70 @@ interface EventDetailProps {
   onBack: () => void;
 }
 
+interface CopyLinkButtonProps {
+  eventId: string;
+}
+
+const CopyLinkButton = ({ eventId }: CopyLinkButtonProps) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    const fullUrl = `${window.location.origin}/events/${eventId}`;
+
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("No se pudo copiar el texto", err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`p-2 rounded-full transition-colors duration-200 shadow-lg flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-opacity-50 ${
+        copied
+          ? "bg-green-500 hover:bg-green-600 text-white focus:ring-green-300"
+          : "bg-indigo-500 hover:bg-indigo-600 text-white focus:ring-indigo-300"
+      }`}
+      aria-label={copied ? "Enlace copiado" : "Copiar Enlace"}
+      title={copied ? "Enlace copiado" : "Copiar Enlace para Compartir"}
+    >
+      {copied ? (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ) : (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.74 1.74" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.74-1.74" />
+        </svg>
+      )}
+    </button>
+  );
+};
+
 const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
   const { data: event, isLoading, isError } = useEventDetails(eventId);
   const { mutate: updateEventMutate, isPending: isUpdating } = useUpdateEvent();
@@ -110,6 +174,7 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
           >
             <Pencil2Icon width="16" height="16" />
           </IconButton>
+          <CopyLinkButton eventId={event.id} />
         </Flex>
 
         <Card variant="surface" className="p-4">

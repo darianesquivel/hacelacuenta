@@ -9,16 +9,14 @@ import {
   where,
   serverTimestamp,
   orderBy,
-  updateDoc, // <-- Importación necesaria para updateEvent
+  updateDoc,
 } from "firebase/firestore";
 import { app } from "../firebase/firebase";
 import { type User } from "firebase/auth";
 
 const db = getFirestore(app);
 
-// -----------------
-// 🔹 Tipos
-// -----------------
+// TYPES
 
 export interface UserReference {
   uid: string;
@@ -57,13 +55,11 @@ export interface NewExpenseData {
   eventId: string;
   description: string;
   amount: number;
-  paidBy: User;
+  paidBy: UserReference;
   sharedWith: UserReference[];
 }
 
-// -----------------
-// 🔹 EVENTOS
-// -----------------
+// EVENTS
 
 const getEventsCollectionRef = () => collection(db, "events");
 
@@ -81,7 +77,6 @@ export async function createEvent(data: NewEventData) {
     email: data.owner.email,
   };
 
-  // Corrección anterior: Combina invitados y dueño, y elimina duplicados
   const memberEmailsSet = new Set<string>(data.memberEmails);
 
   if (ownerRef.email) {
@@ -104,7 +99,6 @@ export async function createEvent(data: NewEventData) {
   return docRef.id;
 }
 
-// FUNCIÓN PARA ACTUALIZAR EVENTO
 export async function updateEvent(
   data: Partial<Omit<Event, "owner" | "createdAt" | "id">> & { eventId: string }
 ): Promise<Event> {
@@ -112,22 +106,15 @@ export async function updateEvent(
   const eventRef = doc(db, "events", eventId);
 
   if (updateData.memberEmails) {
-    // Si se actualizan los emails, aseguramos que sean únicos y válidos
     const memberEmailsSet = new Set<string>(updateData.memberEmails);
-
-    // Opcional: Si necesitas asegurar que el dueño original permanezca,
-    // primero tendrías que obtener el evento original, pero para
-    // simplificar, confiamos en que el frontend lo incluye si es necesario.
 
     updateData.memberEmails = Array.from(memberEmailsSet).filter(
       (email) => email && email.includes("@")
     );
   }
 
-  // Actualiza el documento en Firestore
   await updateDoc(eventRef, updateData as Record<string, any>);
 
-  // Obtener el evento actualizado para retornarlo (necesario para la invalidación en React Query)
   const updatedSnapshot = await getDoc(eventRef);
   if (!updatedSnapshot.exists()) {
     throw new Error(
@@ -141,17 +128,6 @@ export async function updateEvent(
     ...eventData,
     createdAt: eventData?.createdAt?.toDate?.() ?? new Date(),
   } as Event;
-}
-
-export async function getAllEvents(): Promise<Event[]> {
-  const snapshot = await getDocs(
-    query(getEventsCollectionRef(), orderBy("createdAt", "desc"))
-  );
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt?.toDate?.() ?? new Date(),
-  })) as Event[];
 }
 
 export async function getUserEvents(email: string): Promise<Event[]> {
@@ -205,9 +181,7 @@ export async function getEventById(eventId: string): Promise<Event | null> {
   } as Event;
 }
 
-// -----------------
-// 🔹 GASTOS
-// -----------------
+// EXPENSES
 
 const getExpensesCollectionRef = (eventId: string) =>
   collection(db, "events", eventId, "expenses");

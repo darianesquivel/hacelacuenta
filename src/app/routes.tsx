@@ -3,6 +3,7 @@ import AuthGuard from "../layout/AuthGuard";
 import RootLayout from "../layout/RootLayout";
 import Home from "../pages/Home";
 import LoginPage from "../pages/LoginPage";
+import EventDetailRouteWrapper from "../components/EventDetailRouteWrapper";
 
 export const router = createBrowserRouter([
   {
@@ -14,15 +15,15 @@ export const router = createBrowserRouter([
         element: <LoginPage />,
       },
       {
+        path: "/events/:id",
+        element: <EventDetailRouteWrapper />,
+      },
+      {
         element: <AuthGuard />,
         children: [
           {
             path: "/",
             element: <Home />,
-          },
-          {
-            path: "/events/:id",
-            element: <>Grupo Detalle Placeholder</>,
           },
         ],
       },
