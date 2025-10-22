@@ -74,7 +74,6 @@ const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
       return;
     }
 
-    // Encontrar los miembros con quienes se reparte
     const sharedWithMembers = members.filter((m) =>
       selectedMembers.includes(m.id)
     );

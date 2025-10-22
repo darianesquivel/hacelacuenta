@@ -156,7 +156,12 @@ const MemberManager = ({
               type="email"
             />
           </Flex>
-          <Button onClick={addMember} color="green" disabled={isAdding}>
+          <Button
+            onClick={addMember}
+            color="green"
+            disabled={isAdding}
+            type="button"
+          >
             <PlusIcon width="16" height="16" />
             {isAdding ? "Verificando..." : "Agregar"}
           </Button>
@@ -196,6 +201,7 @@ const MemberManager = ({
                   color="red"
                   size="1"
                   onClick={() => removeMember(member.id)}
+                  type="button"
                 >
                   <Cross2Icon width="12" height="12" />
                 </IconButton>

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Card,
   Heading,
@@ -12,12 +11,14 @@ import { CheckIcon, Cross2Icon, ClockIcon } from "@radix-ui/react-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPayments, updatePaymentStatus } from "../api/data";
 import { useAuthStatus } from "../hooks/useAuthStatus";
+import type { EventMember } from "../api/data";
 
 interface PaymentHistoryProps {
   eventId: string;
+  members?: EventMember[];
 }
 
-const PaymentHistory = ({ eventId }: PaymentHistoryProps) => {
+const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
   const { currentUser } = useAuthStatus();
   const queryClient = useQueryClient();
 
@@ -50,6 +51,48 @@ const PaymentHistory = ({ eventId }: PaymentHistoryProps) => {
     status: "completed" | "cancelled"
   ) => {
     updatePaymentMutation.mutate({ paymentId, status });
+  };
+
+  // Función para verificar si el usuario actual puede confirmar el pago
+  const canConfirmPayment = (payment: any) => {
+    if (!currentUser) return false;
+
+    // Si el usuario actual es el que debe pagar
+    if (payment.fromUser.email === currentUser.email) return true;
+
+    // Si el usuario actual es el que recibe el pago
+    if (payment.toUser.email === currentUser.email) return true;
+
+    // Si el usuario actual no tiene email, verificar por nombre
+    if (!currentUser.email) {
+      const currentUserMember = members.find(
+        (m) =>
+          m.email === currentUser.email ||
+          (m.name &&
+            currentUser.displayName &&
+            m.name === currentUser.displayName)
+      );
+
+      if (currentUserMember) {
+        // Verificar si es el que debe pagar o el que recibe
+        const fromMember = members.find(
+          (m) =>
+            (m.email || m.name) ===
+            (payment.fromUser.email || payment.fromUser.displayName)
+        );
+        const toMember = members.find(
+          (m) =>
+            (m.email || m.name) ===
+            (payment.toUser.email || payment.toUser.displayName)
+        );
+
+        return (
+          currentUserMember === fromMember || currentUserMember === toMember
+        );
+      }
+    }
+
+    return false;
   };
 
   if (isLoading) {
@@ -152,34 +195,38 @@ const PaymentHistory = ({ eventId }: PaymentHistoryProps) => {
                   </Text>
                 </Flex>
 
-                {payment.status === "pending" &&
-                  payment.fromUser.email === currentUser?.email && (
-                    <Flex gap="1">
-                      <Button
-                        size="1"
-                        color="green"
-                        onClick={() =>
-                          handleUpdateStatus(payment.id, "completed")
-                        }
-                        disabled={updatePaymentMutation.isPending}
-                      >
-                        <CheckIcon width="16" height="16" />
-                        Pagado
-                      </Button>
-                      <Button
-                        size="1"
-                        color="red"
-                        variant="soft"
-                        onClick={() =>
-                          handleUpdateStatus(payment.id, "cancelled")
-                        }
-                        disabled={updatePaymentMutation.isPending}
-                      >
-                        <Cross2Icon width="16" height="16" />
-                        Cancelar
-                      </Button>
-                    </Flex>
-                  )}
+                {payment.status === "pending" && canConfirmPayment(payment) && (
+                  <Flex gap="1">
+                    <Button
+                      size="1"
+                      color="green"
+                      onClick={() =>
+                        handleUpdateStatus(payment.id, "completed")
+                      }
+                      disabled={updatePaymentMutation.isPending}
+                    >
+                      <CheckIcon width="16" height="16" />
+                      {payment.fromUser.email === currentUser?.email ||
+                      (payment.fromUser.displayName &&
+                        currentUser?.displayName ===
+                          payment.fromUser.displayName)
+                        ? "Pagado"
+                        : "Recibido"}
+                    </Button>
+                    <Button
+                      size="1"
+                      color="red"
+                      variant="soft"
+                      onClick={() =>
+                        handleUpdateStatus(payment.id, "cancelled")
+                      }
+                      disabled={updatePaymentMutation.isPending}
+                    >
+                      <Cross2Icon width="16" height="16" />
+                      Cancelar
+                    </Button>
+                  </Flex>
+                )}
               </Flex>
             </Flex>
           </Card>

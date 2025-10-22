@@ -1,4 +1,3 @@
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getExpenses, getPayments } from "../api/data";
 import { getBalanceSummary } from "../utils/balanceCalculator";
@@ -74,7 +73,7 @@ const PaymentManager = ({ eventId, members }: PaymentManagerProps) => {
   return (
     <Flex direction="column" gap="4">
       <PaymentSuggestions eventId={eventId} suggestions={suggestions} />
-      <PaymentHistory eventId={eventId} />
+      <PaymentHistory eventId={eventId} members={members} />
     </Flex>
   );
 };
