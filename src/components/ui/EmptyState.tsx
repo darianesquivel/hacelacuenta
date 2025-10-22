@@ -9,7 +9,7 @@ interface EmptyStateProps {
 export const EmptyState = ({ title, description, icon }: EmptyStateProps) => {
   return (
     <Card variant="surface" className="p-6">
-      <Flex direction="column" gap="3" align="center" textAlign="center">
+      <Flex direction="column" gap="3" align="center">
         {icon && (
           <Flex
             align="center"

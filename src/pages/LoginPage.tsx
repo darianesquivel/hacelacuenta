@@ -24,8 +24,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Hero Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 from-indigo-600 via-purple-600 to-pink-500 relative overflow-hidden items-center justify-center">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative z-10 flex flex-col justify-center items-center text-white p-12">
           <div className="text-center max-w-md">
@@ -70,14 +69,8 @@ const LoginPage = () => {
             </div>
           </div>
         </div>
-
-        {/* Decorative elements */}
-        <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full"></div>
-        <div className="absolute bottom-20 left-10 w-24 h-24 bg-white/5 rounded-full"></div>
-        <div className="absolute top-1/3 right-20 w-16 h-16 bg-white/10 rounded-full"></div>
       </div>
 
-      {/* Right Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
