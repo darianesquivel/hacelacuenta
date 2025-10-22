@@ -1,5 +1,7 @@
 import { Outlet } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 import NavHeader from "./NavHeader";
+import "react-toastify/dist/ReactToastify.css";
 
 const RootLayout = () => {
   return (
@@ -8,6 +10,18 @@ const RootLayout = () => {
       <main>
         <Outlet />
       </main>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   Text,
@@ -12,6 +12,7 @@ import { PlusIcon, Cross2Icon } from "@radix-ui/react-icons";
 import type { EventMember } from "../api/data";
 import { checkIfUserIsRegistered } from "../api/auth";
 import { useAuthStatus } from "../hooks/useAuthStatus";
+import { useToast } from "../hooks/useToast";
 
 interface MemberManagerProps {
   members: EventMember[];
@@ -33,6 +34,7 @@ const MemberManager = ({
   const [error, setError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const { currentUser: authUser } = useAuthStatus();
+  const { showSuccess } = useToast();
 
   const isMemberRegistered = (member: EventMember): boolean => {
     if (member.email && authUser?.email && member.email === authUser.email) {
@@ -44,7 +46,7 @@ const MemberManager = ({
     return false;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (
       isCreatingEvent &&
       currentUser &&
@@ -112,13 +114,18 @@ const MemberManager = ({
       onMembersChange([...members, newMember]);
       setNewMemberName("");
       setNewMemberEmail("");
+      showSuccess(`Miembro "${newMemberName.trim()}" agregado exitosamente`);
     } finally {
       setIsAdding(false);
     }
   };
 
   const removeMember = (memberId: string) => {
+    const memberToRemove = members.find((m) => m.id === memberId);
     onMembersChange(members.filter((m) => m.id !== memberId));
+    if (memberToRemove) {
+      showSuccess(`Miembro "${memberToRemove.name}" eliminado exitosamente`);
+    }
   };
 
   return (

@@ -11,6 +11,7 @@ import {
 import { useCreateEvent } from "../hooks/useEvents";
 import MemberManager from "./MemberManager";
 import { useAuthStatus } from "../hooks/useAuthStatus";
+import { useToast } from "../hooks/useToast";
 import type { EventMember } from "../api/data";
 
 interface EventFormProps {
@@ -23,6 +24,7 @@ const EventForm = ({ onClose }: EventFormProps) => {
   const [members, setMembers] = useState<EventMember[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const { currentUser } = useAuthStatus();
+  const { showSuccess, showError } = useToast();
 
   const { mutateAsync: createEventMutate, isPending } = useCreateEvent();
 
@@ -46,10 +48,14 @@ const EventForm = ({ onClose }: EventFormProps) => {
         description,
         members,
       });
+      showSuccess(`Evento "${name}" creado exitosamente`);
       onClose();
     } catch (err: any) {
       console.error(err);
-      setFormError(err.message || "Error desconocido al crear el evento.");
+      const errorMessage =
+        err.message || "Error desconocido al crear el evento.";
+      setFormError(errorMessage);
+      showError(errorMessage);
     }
   };
 

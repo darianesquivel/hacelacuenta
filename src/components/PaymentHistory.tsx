@@ -11,6 +11,7 @@ import { CheckIcon, Cross2Icon, ClockIcon } from "@radix-ui/react-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPayments, updatePaymentStatus } from "../api/data";
 import { useAuthStatus } from "../hooks/useAuthStatus";
+import { useToast } from "../hooks/useToast";
 import type { EventMember } from "../api/data";
 
 interface PaymentHistoryProps {
@@ -21,6 +22,7 @@ interface PaymentHistoryProps {
 const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
   const { currentUser } = useAuthStatus();
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToast();
 
   const {
     data: payments,
@@ -41,8 +43,12 @@ const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
       status: "completed" | "cancelled";
     }) => updatePaymentStatus(eventId, paymentId, status),
     onSuccess: () => {
+      showSuccess("Estado del pago actualizado");
       queryClient.invalidateQueries({ queryKey: ["payments", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
+    },
+    onError: (error) => {
+      showError(error.message || "Error al actualizar el pago");
     },
   });
 

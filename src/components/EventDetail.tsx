@@ -25,6 +25,7 @@ import {
   useDeleteEvent,
 } from "../hooks/useEvents";
 import { useAuthStatus } from "../hooks/useAuthStatus";
+import { useToast } from "../hooks/useToast";
 import ExpenseForm from "./ExpenseForm";
 import EventBalance from "./EventBalance";
 import MemberManager from "./MemberManager";
@@ -105,6 +106,7 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
   const { mutate: updateEventMutate, isPending: isUpdating } = useUpdateEvent();
   const { mutate: deleteEventMutate, isPending: isDeleting } = useDeleteEvent();
   const { currentUser } = useAuthStatus();
+  const { showSuccess, showError } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(event?.name || "");
@@ -169,10 +171,13 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
         description: description.trim(),
         members,
       });
+      showSuccess("Evento actualizado exitosamente");
       setIsEditing(false);
     } catch (err: any) {
       console.error(err);
-      setEditError(err.message || "Error al actualizar el evento.");
+      const errorMessage = err.message || "Error al actualizar el evento.";
+      setEditError(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -184,10 +189,13 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
     if (confirm(confirmMessage)) {
       try {
         await deleteEventMutate(eventId);
+        showSuccess(`Evento "${event.name}" eliminado exitosamente`);
         onBack();
       } catch (err: any) {
         console.error("Error al eliminar evento:", err);
-        setEditError(err.message || "Error al eliminar el evento.");
+        const errorMessage = err.message || "Error al eliminar el evento.";
+        setEditError(errorMessage);
+        showError(errorMessage);
       }
     }
   };

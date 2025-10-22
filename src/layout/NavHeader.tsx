@@ -2,10 +2,12 @@ import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import { Sun, Moon, LogOut } from "lucide-react";
 import { Button, Avatar, Flex, Text } from "@radix-ui/themes";
+import { useToast } from "../hooks/useToast";
 
 const NavHeader = () => {
   const { currentUser, signOut } = useAuthStore();
   const { currentTheme, toggleTheme } = useThemeStore();
+  const { showSuccess, showError } = useToast();
 
   const photoURL =
     currentUser?.photoURL || "https://placehold.co/40x40/cccccc/ffffff?text=U";
@@ -15,8 +17,10 @@ const NavHeader = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      showSuccess("Sesión cerrada exitosamente");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
+      showError("Error al cerrar sesión");
     }
   };
 

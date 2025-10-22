@@ -10,7 +10,10 @@ import {
 } from "@radix-ui/themes";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 import { addExpense } from "../api/data";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "../hooks/useToast";
+import { useQueryInvalidation } from "../hooks/useQueryInvalidation";
+import { MESSAGES } from "../constants/messages";
 
 import type { EventMember } from "../api/data";
 
@@ -21,7 +24,8 @@ interface ExpenseFormProps {
 
 const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
   const { currentUser } = useAuthStatus();
-  const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToast();
+  const { invalidateExpenseQueries } = useQueryInvalidation();
 
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number | "">("");
@@ -36,12 +40,14 @@ const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
       setDescription("");
       setAmount("");
       setFormError(null);
-      queryClient.invalidateQueries({ queryKey: ["expenses", eventId] });
-      queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
+      showSuccess(MESSAGES.SUCCESS.EXPENSE_ADDED);
+      invalidateExpenseQueries(eventId);
     },
     onError: (error) => {
       console.error("Error al agregar gasto:", error);
-      setFormError(error.message || "Error desconocido al agregar el gasto.");
+      const errorMessage = error.message || MESSAGES.ERROR.GENERIC;
+      setFormError(errorMessage);
+      showError(errorMessage);
     },
   });
 

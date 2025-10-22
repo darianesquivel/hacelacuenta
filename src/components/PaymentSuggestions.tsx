@@ -3,6 +3,7 @@ import { ArrowRightIcon, CheckIcon } from "@radix-ui/react-icons";
 import type { PaymentSuggestion } from "../api/data";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addPayment } from "../api/data";
+import { useToast } from "../hooks/useToast";
 
 interface PaymentSuggestionsProps {
   eventId: string;
@@ -16,6 +17,7 @@ const PaymentSuggestions = ({
   onPaymentAdded,
 }: PaymentSuggestionsProps) => {
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToast();
 
   const addPaymentMutation = useMutation({
     mutationFn: (suggestion: PaymentSuggestion) =>
@@ -27,9 +29,13 @@ const PaymentSuggestions = ({
         description: suggestion.reason,
       }),
     onSuccess: () => {
+      showSuccess("Pago agregado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["payments", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
       onPaymentAdded?.();
+    },
+    onError: (error) => {
+      showError(error.message || "Error al agregar el pago");
     },
   });
 

@@ -1,6 +1,7 @@
 import { Flex, Spinner, Callout, Heading } from "@radix-ui/themes";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getExpenses, updateExpense, deleteExpense } from "../api/data";
+import { useToast } from "../hooks/useToast";
 import ExpenseEditor from "./ExpenseEditor";
 import type { EventMember, Expense } from "../api/data";
 
@@ -16,6 +17,7 @@ const ExpensesList = ({
   currentUserEmail,
 }: ExpensesListProps) => {
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToast();
 
   const {
     data: expenses,
@@ -36,16 +38,24 @@ const ExpensesList = ({
       updates: Partial<Expense>;
     }) => updateExpense(expenseId, updates, eventId),
     onSuccess: () => {
+      showSuccess("Gasto actualizado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["expenses", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
+    },
+    onError: (error) => {
+      showError(error.message || "Error al actualizar el gasto");
     },
   });
 
   const deleteExpenseMutation = useMutation({
     mutationFn: (expenseId: string) => deleteExpense(expenseId, eventId),
     onSuccess: () => {
+      showSuccess("Gasto eliminado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["expenses", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
+    },
+    onError: (error) => {
+      showError(error.message || "Error al eliminar el gasto");
     },
   });
 

@@ -1,0 +1,33 @@
+export const MESSAGES = {
+  SUCCESS: {
+    EVENT_CREATED: "Evento creado exitosamente",
+    EVENT_UPDATED: "Evento actualizado exitosamente",
+    EVENT_DELETED: "Evento eliminado exitosamente",
+    MEMBER_ADDED: "Miembro agregado exitosamente",
+    MEMBER_REMOVED: "Miembro eliminado exitosamente",
+    EXPENSE_ADDED: "Gasto agregado exitosamente",
+    EXPENSE_UPDATED: "Gasto actualizado exitosamente",
+    EXPENSE_DELETED: "Gasto eliminado exitosamente",
+    PAYMENT_ADDED: "Pago agregado exitosamente",
+    PAYMENT_UPDATED: "Estado del pago actualizado",
+    LOGIN_SUCCESS: "Inicio de sesión exitoso",
+    LOGOUT_SUCCESS: "Sesión cerrada exitosamente",
+  },
+  ERROR: {
+    GENERIC: "Ha ocurrido un error inesperado",
+    NETWORK: "Error de conexión. Verifica tu internet.",
+    AUTH_REQUIRED: "Debes estar autenticado para realizar esta acción",
+    VALIDATION: "Por favor, completa todos los campos requeridos",
+    EVENT_NOT_FOUND: "El evento no existe o no tienes permisos para verlo",
+    MEMBER_EXISTS: "Ya existe un miembro con ese nombre o email",
+    INVALID_AMOUNT: "El monto debe ser mayor a 0",
+    LOGIN_FAILED: "Error al iniciar sesión",
+    LOGOUT_FAILED: "Error al cerrar sesión",
+  },
+  INFO: {
+    LOADING: "Cargando...",
+    PROCESSING: "Procesando...",
+    SAVING: "Guardando...",
+    DELETING: "Eliminando...",
+  },
+} as const;
