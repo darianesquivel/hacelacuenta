@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Card, Text, Flex, Spinner, Callout, Heading } from "@radix-ui/themes";
+import { Flex, Spinner, Callout, Heading } from "@radix-ui/themes";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getExpenses, updateExpense, deleteExpense } from "../api/data";
 import ExpenseEditor from "./ExpenseEditor";
@@ -17,7 +16,6 @@ const ExpensesList = ({
   currentUserEmail,
 }: ExpensesListProps) => {
   const queryClient = useQueryClient();
-  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
 
   const {
     data: expenses,

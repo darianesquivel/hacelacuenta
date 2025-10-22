@@ -7,7 +7,6 @@ import {
   Flex,
   IconButton,
   Callout,
-  Dialog,
 } from "@radix-ui/themes";
 import { Pencil2Icon, TrashIcon } from "@radix-ui/react-icons";
 import type { EventMember, Expense } from "../api/data";
@@ -35,7 +34,6 @@ const ExpenseEditor = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Encontrar el miembro que pagó originalmente
     const paidByMember = members.find(
       (m) =>
         m.email === expense.paidBy.email ||
@@ -45,7 +43,6 @@ const ExpenseEditor = ({
       setPaidByMemberId(paidByMember.id);
     }
 
-    // Encontrar los miembros con quienes se reparte originalmente
     const originalSharedWith = expense.sharedWith
       .map((sw) =>
         members.find((m) => m.email === sw.email || m.name === sw.displayName)
@@ -54,11 +51,6 @@ const ExpenseEditor = ({
       .map((m) => m!.id);
     setSelectedMembers(originalSharedWith);
   }, [expense, members]);
-
-  // Debug: Log cuando cambien los miembros
-  useEffect(() => {
-    console.log("Miembros actualizados en ExpenseEditor:", members);
-  }, [members]);
 
   const handleSave = () => {
     setError(null);

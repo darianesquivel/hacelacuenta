@@ -59,14 +59,11 @@ export function useUpdateEvent() {
         eventId: string;
       }
     ) => {
-      console.log("Actualizando evento con datos:", data);
       return updateEvent(data);
     },
     onSuccess: (updatedEvent) => {
-      console.log("Evento actualizado exitosamente:", updatedEvent);
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["event", updatedEvent.id] });
-      console.log(`Evento ${updatedEvent.id} actualizado.`);
     },
     onError: (error) => {
       console.error("Error al actualizar evento:", error);
@@ -97,7 +94,6 @@ export function useDeleteEvent() {
   return useMutation({
     mutationFn: (eventId: string) => deleteEvent(eventId),
     onSuccess: (_, eventId) => {
-      // Invalidar todas las queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["event", eventId] });
       queryClient.invalidateQueries({ queryKey: ["expenses", eventId] });
@@ -108,8 +104,6 @@ export function useDeleteEvent() {
           queryKey: ["events", currentUser.uid],
         });
       }
-
-      console.log(`Evento ${eventId} eliminado exitosamente`);
     },
     onError: (error) => {
       console.error("Error al eliminar evento:", error);

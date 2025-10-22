@@ -9,7 +9,7 @@ import {
   Callout,
 } from "@radix-ui/themes";
 import { PlusIcon, Cross2Icon } from "@radix-ui/react-icons";
-import { EventMember } from "../api/data";
+import type { EventMember } from "../api/data";
 import { checkIfUserIsRegistered } from "../api/auth";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 
@@ -34,23 +34,16 @@ const MemberManager = ({
   const [isAdding, setIsAdding] = useState(false);
   const { currentUser: authUser } = useAuthStatus();
 
-  // Función para verificar si un miembro está registrado dinámicamente
   const isMemberRegistered = (member: EventMember): boolean => {
-    // Si el miembro tiene email y coincide con el usuario autenticado actual
     if (member.email && authUser?.email && member.email === authUser.email) {
       return true;
     }
-    // Si el miembro tiene email, verificar si está registrado en Firebase
     if (member.email) {
-      // Si tiene email, asumimos que está registrado (puede acceder al evento)
-      // La verificación real se hace cuando el usuario intenta acceder
       return true;
     }
-    // Si no tiene email, no está registrado
     return false;
   };
 
-  // Agregar automáticamente al creador si no está presente (solo en creación de evento)
   React.useEffect(() => {
     if (
       isCreatingEvent &&
@@ -58,7 +51,6 @@ const MemberManager = ({
       currentUser.email &&
       members.length === 0
     ) {
-      // Verificar si ya existe el owner en los miembros
       const ownerExists = members.some(
         (member) =>
           member.email === currentUser.email ||
@@ -75,7 +67,7 @@ const MemberManager = ({
         onMembersChange([ownerMember]);
       }
     }
-  }, [isCreatingEvent, currentUser]); // Solo se ejecuta cuando cambia isCreatingEvent o currentUser
+  }, [isCreatingEvent, currentUser]);
 
   const addMember = async () => {
     setError(null);
@@ -87,7 +79,6 @@ const MemberManager = ({
         return;
       }
 
-      // Verificar si ya existe un miembro con ese nombre
       if (
         members.some(
           (m) => m.name.toLowerCase() === newMemberName.toLowerCase()
@@ -97,20 +88,17 @@ const MemberManager = ({
         return;
       }
 
-      // Verificar si ya existe un miembro con ese email (si se proporciona)
       if (newMemberEmail && members.some((m) => m.email === newMemberEmail)) {
         setError("Ya existe un miembro con ese email");
         return;
       }
 
-      // Verificar si el usuario está registrado en Firebase (si se proporciona email)
       let isRegistered = false;
       if (newMemberEmail) {
         try {
           isRegistered = await checkIfUserIsRegistered(newMemberEmail);
         } catch (error) {
           console.error("Error verificando usuario:", error);
-          // Continuar con isRegistered = false
         }
       }
 
@@ -120,10 +108,6 @@ const MemberManager = ({
         email: newMemberEmail.trim() || undefined,
         isRegistered,
       };
-
-      console.log("Agregando miembro:", newMember);
-      console.log("Miembros actuales:", members);
-      console.log("Nuevos miembros:", [...members, newMember]);
 
       onMembersChange([...members, newMember]);
       setNewMemberName("");
@@ -149,7 +133,6 @@ const MemberManager = ({
         </Callout.Root>
       )}
 
-      {/* Formulario para agregar miembro */}
       <Flex direction="column" gap="3" mb="4">
         <Flex gap="2" align="end">
           <Flex direction="column" gap="1" style={{ flex: 1 }}>
@@ -183,7 +166,6 @@ const MemberManager = ({
         </Text>
       </Flex>
 
-      {/* Lista de miembros */}
       <Flex direction="column" gap="2">
         <Text size="2" weight="medium">
           Miembros actuales ({members.length}):

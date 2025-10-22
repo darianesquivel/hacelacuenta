@@ -59,6 +59,24 @@ export interface Expense {
   eventId: string;
 }
 
+export interface Payment {
+  id: string;
+  eventId: string;
+  fromUser: UserReference;
+  toUser: UserReference;
+  amount: number;
+  description?: string;
+  createdAt: Date;
+  status: "pending" | "completed" | "cancelled";
+}
+
+export interface PaymentSuggestion {
+  fromUser: UserReference;
+  toUser: UserReference;
+  amount: number;
+  reason: string;
+}
+
 export interface NewExpenseData {
   eventId: string;
   description: string;
@@ -85,13 +103,11 @@ export async function createEvent(data: NewEventData) {
     email: data.owner.email,
   };
 
-  // Agregar el owner como miembro si no está ya incluido
   const membersSet = new Set<string>();
   data.members?.forEach((member) => {
     if (member.email) membersSet.add(member.email);
   });
 
-  // Agregar el owner como miembro si no está ya incluido
   if (ownerRef.email && !membersSet.has(ownerRef.email)) {
     data.members = data.members || [];
     data.members.push({
@@ -109,7 +125,6 @@ export async function createEvent(data: NewEventData) {
       isRegistered: member.isRegistered || false,
     };
 
-    // Solo agregar email si existe, sino no incluir el campo
     if (member.email) {
       processedMember.email = member.email;
     }
@@ -135,16 +150,11 @@ export async function updateEvent(
   const { eventId, ...updateData } = data;
   const eventRef = doc(db, "events", eventId);
 
-  console.log("updateEvent - Datos recibidos:", data);
-  console.log("updateEvent - eventId:", eventId);
-  console.log("updateEvent - updateData:", updateData);
-
   if (updateData.members) {
     console.log(
       "updateEvent - Miembros antes del procesamiento:",
       updateData.members
     );
-    // No filtrar miembros, mantener todos los miembros (con o sin email)
     updateData.members = updateData.members.map((member) => {
       const processedMember: any = {
         id: member.id,
@@ -152,20 +162,14 @@ export async function updateEvent(
         isRegistered: member.isRegistered || false,
       };
 
-      // Solo agregar email si existe, sino no incluir el campo
       if (member.email) {
         processedMember.email = member.email;
       }
 
       return processedMember;
     });
-    console.log(
-      "updateEvent - Miembros después del procesamiento:",
-      updateData.members
-    );
   }
 
-  console.log("updateEvent - Datos finales a guardar:", updateData);
   await updateDoc(eventRef, updateData as Record<string, any>);
 
   const updatedSnapshot = await getDoc(eventRef);
@@ -187,9 +191,6 @@ export async function getUserEvents(email: string): Promise<Event[]> {
   if (!email) return [];
 
   const q1 = query(getEventsCollectionRef(), where("owner.email", "==", email));
-
-  // Para miembros, necesitamos obtener todos los eventos y filtrar
-  // ya que Firestore no soporta consultas complejas en arrays de objetos
   const q2 = query(getEventsCollectionRef());
 
   const [ownerSnapshot, memberSnapshot] = await Promise.all([
@@ -210,10 +211,8 @@ export async function getUserEvents(email: string): Promise<Event[]> {
     eventsMap.set(event.id, event);
   };
 
-  // Procesar eventos del owner
   ownerSnapshot.docs.forEach(processDoc);
 
-  // Procesar eventos donde el usuario es miembro
   memberSnapshot.docs.forEach((doc) => {
     if (!doc.exists()) return;
     const data = doc.data();
@@ -243,6 +242,21 @@ export async function getEventById(eventId: string): Promise<Event | null> {
     ...data,
     createdAt: data.createdAt?.toDate?.() ?? new Date(),
   } as Event;
+}
+
+export async function deleteEvent(eventId: string): Promise<void> {
+  const expensesSnapshot = await getDocs(
+    collection(db, "events", eventId, "expenses")
+  );
+
+  const deleteExpensesPromises = expensesSnapshot.docs.map((expenseDoc) =>
+    deleteDoc(expenseDoc.ref)
+  );
+
+  await Promise.all(deleteExpensesPromises);
+
+  const eventRef = doc(db, "events", eventId);
+  await deleteDoc(eventRef);
 }
 
 // EXPENSES
@@ -302,12 +316,6 @@ export async function updateExpense(
   const targetEventId = eventId || updates.eventId!;
   const expenseRef = doc(db, "events", targetEventId, "expenses", expenseId);
 
-  console.log("Actualizando gasto:", {
-    expenseId,
-    updates,
-    eventId: targetEventId,
-  });
-
   await updateDoc(expenseRef, updates as Record<string, any>);
 }
 
@@ -320,29 +328,113 @@ export async function deleteExpense(
   }
 
   const expenseRef = doc(db, "events", eventId, "expenses", expenseId);
-  console.log("Eliminando gasto:", { expenseId, eventId });
-
   await deleteDoc(expenseRef);
 }
 
-export async function deleteEvent(eventId: string): Promise<void> {
-  console.log("Eliminando evento:", { eventId });
+// PAYMENT FUNCTIONS
 
-  // Primero eliminar todos los gastos del evento
-  const expensesSnapshot = await getDocs(
-    collection(db, "events", eventId, "expenses")
-  );
+export async function addPayment(data: {
+  eventId: string;
+  fromUser: UserReference;
+  toUser: UserReference;
+  amount: number;
+  description?: string;
+}): Promise<string> {
+  const paymentRef = collection(db, "events", data.eventId, "payments");
 
-  const deleteExpensesPromises = expensesSnapshot.docs.map((expenseDoc) =>
-    deleteDoc(expenseDoc.ref)
-  );
+  const newPayment: Omit<Payment, "id"> = {
+    eventId: data.eventId,
+    fromUser: data.fromUser,
+    toUser: data.toUser,
+    amount: data.amount,
+    description: data.description,
+    createdAt: serverTimestamp() as unknown as Date,
+    status: "pending",
+  };
 
-  await Promise.all(deleteExpensesPromises);
-  console.log(`Eliminados ${expensesSnapshot.docs.length} gastos del evento`);
+  const docRef = await addDoc(paymentRef, newPayment);
+  return docRef.id;
+}
 
-  // Luego eliminar el evento
-  const eventRef = doc(db, "events", eventId);
-  await deleteDoc(eventRef);
+export async function updatePaymentStatus(
+  eventId: string,
+  paymentId: string,
+  status: "completed" | "cancelled"
+): Promise<void> {
+  const paymentRef = doc(db, "events", eventId, "payments", paymentId);
+  await updateDoc(paymentRef, { status });
+}
 
-  console.log("Evento eliminado exitosamente");
+export async function getPayments(eventId: string): Promise<Payment[]> {
+  const paymentsRef = collection(db, "events", eventId, "payments");
+  const snapshot = await getDocs(paymentsRef);
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: doc.data().createdAt?.toDate?.() ?? new Date(),
+  })) as Payment[];
+}
+
+export function calculatePaymentSuggestions(
+  balances: Array<[string, number]>,
+  members: EventMember[]
+): PaymentSuggestion[] {
+  const suggestions: PaymentSuggestion[] = [];
+
+  const debtors = balances.filter(([, balance]) => balance < 0);
+  const creditors = balances.filter(([, balance]) => balance > 0);
+
+  debtors.sort(([, a], [, b]) => a - b);
+  creditors.sort(([, a], [, b]) => b - a);
+
+  let debtorIndex = 0;
+  let creditorIndex = 0;
+
+  while (debtorIndex < debtors.length && creditorIndex < creditors.length) {
+    const [debtorEmail, debtorBalance] = debtors[debtorIndex];
+    const [creditorEmail, creditorBalance] = creditors[creditorIndex];
+
+    const debtorMember = members.find(
+      (m) => (m.email || m.name) === debtorEmail
+    );
+    const creditorMember = members.find(
+      (m) => (m.email || m.name) === creditorEmail
+    );
+
+    if (!debtorMember || !creditorMember) {
+      debtorIndex++;
+      creditorIndex++;
+      continue;
+    }
+
+    const paymentAmount = Math.min(Math.abs(debtorBalance), creditorBalance);
+
+    if (paymentAmount > 0.01) {
+      suggestions.push({
+        fromUser: {
+          uid: debtorMember.email || "guest",
+          displayName: debtorMember.name,
+          photoURL: null,
+          email: debtorMember.email || null,
+        },
+        toUser: {
+          uid: creditorMember.email || "guest",
+          displayName: creditorMember.name,
+          photoURL: null,
+          email: creditorMember.email || null,
+        },
+        amount: paymentAmount,
+        reason: `Pago para equilibrar cuentas`,
+      });
+    }
+
+    debtors[debtorIndex][1] += paymentAmount;
+    creditors[creditorIndex][1] -= paymentAmount;
+
+    if (Math.abs(debtors[debtorIndex][1]) < 0.01) debtorIndex++;
+    if (Math.abs(creditors[creditorIndex][1]) < 0.01) creditorIndex++;
+  }
+
+  return suggestions;
 }

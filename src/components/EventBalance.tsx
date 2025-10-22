@@ -1,6 +1,6 @@
 import { Card, Heading, Text, Flex, Spinner, Callout } from "@radix-ui/themes";
 import { useQuery } from "@tanstack/react-query";
-import { getExpenses } from "../api/data";
+import { getExpenses, getPayments } from "../api/data";
 import { getBalanceSummary } from "../utils/balanceCalculator";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 
@@ -23,9 +23,17 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
   const { currentUser } = useAuthStatus();
   const { data: expenses, isLoading, isError } = useEventExpenses(eventId);
 
-  // Función para verificar si un miembro está registrado dinámicamente
+  const {
+    data: payments,
+    isLoading: paymentsLoading,
+    isError: paymentsError,
+  } = useQuery({
+    queryKey: ["payments", eventId],
+    queryFn: () => getPayments(eventId),
+    enabled: !!eventId,
+  });
+
   const isMemberRegistered = (member: EventMember): boolean => {
-    // Si el miembro tiene email y coincide con el usuario autenticado actual
     if (
       member.email &&
       currentUser?.email &&
@@ -33,15 +41,13 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
     ) {
       return true;
     }
-    // Si el miembro tiene email, asumimos que está registrado (puede acceder al evento)
     if (member.email) {
       return true;
     }
-    // Si no tiene email, no está registrado
     return false;
   };
 
-  if (isLoading) {
+  if (isLoading || paymentsLoading) {
     return (
       <Flex justify="center">
         <Spinner />
@@ -49,12 +55,10 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
     );
   }
 
-  if (isError || !expenses) {
+  if (isError || !expenses || paymentsError) {
     return (
       <Callout.Root color="red" size="1">
-        <Callout.Text>
-          No se pudieron cargar los gastos del evento.
-        </Callout.Text>
+        <Callout.Text>No se pudieron cargar los datos del evento.</Callout.Text>
       </Callout.Root>
     );
   }
@@ -70,7 +74,7 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
   }
 
   const memberEmails = members.map((m) => m.email || m.name);
-  const summary = getBalanceSummary(expenses, memberEmails);
+  const summary = getBalanceSummary(expenses, memberEmails, payments);
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   return (

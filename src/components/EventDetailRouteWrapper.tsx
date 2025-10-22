@@ -51,7 +51,6 @@ const EventDetailRouteWrapper = () => {
     );
   }
 
-  // Verificar si el usuario tiene acceso al evento
   const hasAccess =
     currentUser &&
     event &&

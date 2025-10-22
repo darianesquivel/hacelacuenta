@@ -29,6 +29,7 @@ import ExpenseForm from "./ExpenseForm";
 import EventBalance from "./EventBalance";
 import MemberManager from "./MemberManager";
 import ExpensesList from "./ExpensesList";
+import PaymentManager from "./PaymentManager";
 
 interface EventDetailProps {
   eventId: string;
@@ -183,7 +184,7 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
     if (confirm(confirmMessage)) {
       try {
         await deleteEventMutate(eventId);
-        onBack(); // Volver a la lista después de eliminar
+        onBack();
       } catch (err: any) {
         console.error("Error al eliminar evento:", err);
         setEditError(err.message || "Error al eliminar el evento.");
@@ -208,7 +209,6 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
             >
               <Pencil2Icon width="16" height="16" />
             </IconButton>
-            {/* Solo el owner puede eliminar el evento */}
             {currentUser?.email === event.owner.email && (
               <IconButton
                 onClick={handleDelete}
@@ -332,6 +332,7 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
             <Tabs.Trigger value="members">Miembros</Tabs.Trigger>
             <Tabs.Trigger value="expenses">Gastos</Tabs.Trigger>
             <Tabs.Trigger value="balance">Balance</Tabs.Trigger>
+            <Tabs.Trigger value="payments">Pagos</Tabs.Trigger>
           </Tabs.List>
 
           <Tabs.Content value="members">
@@ -364,6 +365,10 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
 
           <Tabs.Content value="balance">
             <EventBalance eventId={eventId} members={event.members || []} />
+          </Tabs.Content>
+
+          <Tabs.Content value="payments">
+            <PaymentManager eventId={eventId} members={event.members || []} />
           </Tabs.Content>
         </Tabs.Root>
       </Flex>
