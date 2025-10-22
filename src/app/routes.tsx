@@ -4,6 +4,7 @@ import RootLayout from "../layout/RootLayout";
 import Home from "../pages/Home";
 import LoginPage from "../pages/LoginPage";
 import EventDetailRouteWrapper from "../components/EventDetailRouteWrapper";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 export const router = createBrowserRouter([
   {
@@ -16,14 +17,22 @@ export const router = createBrowserRouter([
       },
       {
         path: "/events/:id",
-        element: <EventDetailRouteWrapper />,
+        element: (
+          <ErrorBoundary>
+            <EventDetailRouteWrapper />
+          </ErrorBoundary>
+        ),
       },
       {
         element: <AuthGuard />,
         children: [
           {
             path: "/",
-            element: <Home />,
+            element: (
+              <ErrorBoundary>
+                <Home />
+              </ErrorBoundary>
+            ),
           },
         ],
       },

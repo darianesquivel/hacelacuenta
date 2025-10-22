@@ -9,6 +9,9 @@ import {
   Callout,
 } from "@radix-ui/themes";
 import { useCreateEvent } from "../hooks/useEvents";
+import MemberManager from "./MemberManager";
+import { useAuthStatus } from "../hooks/useAuthStatus";
+import type { EventMember } from "../api/data";
 
 interface EventFormProps {
   onClose: () => void;
@@ -17,8 +20,9 @@ interface EventFormProps {
 const EventForm = ({ onClose }: EventFormProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [emailsString, setEmailsString] = useState(""); // Input para emails
+  const [members, setMembers] = useState<EventMember[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
+  const { currentUser } = useAuthStatus();
 
   const { mutateAsync: createEventMutate, isPending } = useCreateEvent();
 
@@ -31,16 +35,16 @@ const EventForm = ({ onClose }: EventFormProps) => {
       return;
     }
 
-    const memberEmails = emailsString
-      .split(",")
-      .map((email) => email.trim())
-      .filter((email) => email.length > 0 && email.includes("@"));
+    if (members.length === 0) {
+      setFormError("Debe agregar al menos un miembro al evento.");
+      return;
+    }
 
     try {
       await createEventMutate({
         name,
         description,
-        memberEmails,
+        members,
       });
       onClose();
     } catch (err: any) {
@@ -83,21 +87,12 @@ const EventForm = ({ onClose }: EventFormProps) => {
           />
         </label>
 
-        <label>
-          <Text size="2" weight="medium" as="div" mb="1">
-            Invitar Miembros (Opcional)
-          </Text>
-
-          <TextField.Root
-            value={emailsString}
-            onChange={(e) => setEmailsString(e.target.value)}
-            placeholder="amigo1@mail.com, amigo2@mail.com"
-          />
-
-          <Text size="1" color="gray" as="div" mt="1">
-            Separa los emails con comas. Tu email se incluye automáticamente.
-          </Text>
-        </label>
+        <MemberManager
+          members={members}
+          onMembersChange={setMembers}
+          currentUser={currentUser}
+          isCreatingEvent={true}
+        />
 
         <Flex gap="3" justify="end" mt="4">
           <Button variant="soft" color="gray" onClick={onClose} type="button">

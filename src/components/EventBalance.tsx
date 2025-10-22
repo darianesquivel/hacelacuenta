@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { getExpenses } from "../api/data";
 import { getBalanceSummary } from "../utils/balanceCalculator";
 
+import type { EventMember } from "../api/data";
+
 interface EventBalanceProps {
   eventId: string;
-  members: string[];
+  members: EventMember[];
 }
 
 const useEventExpenses = (eventId: string) => {
@@ -47,7 +49,8 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
     );
   }
 
-  const summary = getBalanceSummary(expenses, members);
+  const memberEmails = members.map((m) => m.email || m.name);
+  const summary = getBalanceSummary(expenses, memberEmails);
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   return (
@@ -59,10 +62,18 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
 
       <Heading size="3">Saldos Individuales</Heading>
 
-      {summary.map(([email, balance]) => (
-        <Card key={email} variant="surface">
+      {summary.map(([identifier, balance]) => (
+        <Card key={identifier} variant="surface">
           <Flex justify="between" align="center">
-            <Text weight="medium">{email}</Text>
+            <Flex direction="column" gap="1">
+              <Text weight="medium">{identifier}</Text>
+              <Text size="1" color="gray">
+                {members.find((m) => (m.email || m.name) === identifier)
+                  ?.isRegistered
+                  ? "Registrado"
+                  : "Invitado"}
+              </Text>
+            </Flex>
             {balance < 0 ? (
               <Text color="red" weight="bold">
                 Debe: ${Math.abs(balance).toFixed(2)}

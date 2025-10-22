@@ -19,8 +19,11 @@ import {
   UpdateIcon,
 } from "@radix-ui/react-icons";
 import { useEventDetails, useUpdateEvent } from "../hooks/useEvents";
+import { useAuthStatus } from "../hooks/useAuthStatus";
 import ExpenseForm from "./ExpenseForm";
 import EventBalance from "./EventBalance";
+import MemberManager from "./MemberManager";
+import ExpensesList from "./ExpensesList";
 
 interface EventDetailProps {
   eventId: string;
@@ -94,22 +97,23 @@ const CopyLinkButton = ({ eventId }: CopyLinkButtonProps) => {
 const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
   const { data: event, isLoading, isError } = useEventDetails(eventId);
   const { mutate: updateEventMutate, isPending: isUpdating } = useUpdateEvent();
+  const { currentUser } = useAuthStatus();
 
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(event?.name || "");
   const [description, setDescription] = useState(event?.description || "");
   const [emailsString, setEmailsString] = useState(
-    event?.memberEmails.join(", ") || ""
+    event?.members?.map((m) => m.email).join(", ") || ""
   );
   const [editError, setEditError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
       <Card className="mt-8 p-6 text-center">
-        <Spinner />
-        <Text size="3" className="mt-2 block">
-          Cargando detalles del evento...
-        </Text>
+        <Flex direction="column" gap="3" align="center">
+          <Spinner size="3" />
+          <Text size="3">Cargando detalles del evento...</Text>
+        </Flex>
       </Card>
     );
   }
@@ -129,8 +133,8 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
 
   if (name === "" && !isEditing) setName(event.name);
   if (description === "" && !isEditing) setDescription(event.description || "");
-  if (emailsString === "" && !isEditing)
-    setEmailsString(event.memberEmails.join(", "));
+  if (emailsString === "" && !isEditing && event?.members)
+    setEmailsString(event.members.map((m) => m.email).join(", "));
 
   const handleUpdate = async () => {
     setEditError(null);
@@ -141,15 +145,22 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
 
     const memberEmails = emailsString
       .split(",")
-      .map((email) => email.trim())
-      .filter((email) => email.length > 0 && email.includes("@"));
+      .map((email: string) => email.trim())
+      .filter((email: string) => email.length > 0 && email.includes("@"));
+
+    const members = memberEmails.map((email) => ({
+      id: `member-${Date.now()}-${Math.random()}`,
+      name: email,
+      email,
+      isRegistered: false,
+    }));
 
     try {
       await updateEventMutate({
         eventId: event.id,
         name: name.trim(),
         description: description.trim(),
-        memberEmails,
+        members,
       });
       setIsEditing(false);
     } catch (err: any) {
@@ -215,8 +226,12 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
                 <TextArea
                   value={emailsString}
                   onChange={(e) => setEmailsString(e.target.value)}
-                  placeholder="Separados por comas"
+                  placeholder="amigo1@mail.com, amigo2@mail.com"
                 />
+                <Text size="1" color="gray" as="div" mt="1">
+                  Separa los emails con comas. Los nombres se pueden agregar
+                  después.
+                </Text>
               </label>
 
               <Flex justify="end" gap="3">
@@ -248,9 +263,22 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
               <Flex align="center" gap="1">
                 <PersonIcon />
                 <Text size="2" color="gray">
-                  Miembros: {event.memberEmails.length}
+                  Miembros: {event.members?.length || 0}
                 </Text>
               </Flex>
+              {event.members && event.members.length > 0 && (
+                <Flex direction="column" gap="1">
+                  <Text size="1" color="gray" weight="medium">
+                    Participantes:
+                  </Text>
+                  {event.members.map((member, index) => (
+                    <Text key={index} size="1" color="gray">
+                      • {member.name || member.email}
+                      {member.isRegistered && " (Registrado)"}
+                    </Text>
+                  ))}
+                </Flex>
+              )}
               <Text size="1" color="gray">
                 ID: {event.id}
               </Text>
@@ -258,21 +286,43 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
           )}
         </Card>
 
-        <Tabs.Root defaultValue="expenses">
+        <Tabs.Root defaultValue="members">
           <Tabs.List>
+            <Tabs.Trigger value="members">Miembros</Tabs.Trigger>
             <Tabs.Trigger value="expenses">Gastos</Tabs.Trigger>
             <Tabs.Trigger value="balance">Balance</Tabs.Trigger>
           </Tabs.List>
 
+          <Tabs.Content value="members">
+            <MemberManager
+              members={event.members || []}
+              onMembersChange={(newMembers) => {
+                updateEventMutate({
+                  eventId: event.id,
+                  members: newMembers,
+                });
+              }}
+              currentUserEmail={event.owner.email || undefined}
+              currentUser={currentUser}
+              isCreatingEvent={false}
+            />
+          </Tabs.Content>
+
           <Tabs.Content value="expenses">
-            <Heading size="4" mb="3">
-              Agregar Nuevo Gasto
-            </Heading>
-            <ExpenseForm eventId={eventId} members={event.memberEmails} />
+            <Flex direction="column" gap="4">
+              <Heading size="4">Agregar Nuevo Gasto</Heading>
+              <ExpenseForm eventId={eventId} members={event.members || []} />
+
+              <ExpensesList
+                eventId={eventId}
+                members={event.members || []}
+                currentUserEmail={event.owner.email || undefined}
+              />
+            </Flex>
           </Tabs.Content>
 
           <Tabs.Content value="balance">
-            <EventBalance eventId={eventId} members={event.memberEmails} />
+            <EventBalance eventId={eventId} members={event.members || []} />
           </Tabs.Content>
         </Tabs.Root>
       </Flex>

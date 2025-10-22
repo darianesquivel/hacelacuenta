@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   orderBy,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { app } from "../firebase/firebase";
 import { type User } from "firebase/auth";
@@ -25,20 +26,27 @@ export interface UserReference {
   email: string | null;
 }
 
+export interface EventMember {
+  id: string;
+  name: string;
+  email?: string;
+  isRegistered: boolean;
+}
+
 export interface Event {
   id: string;
   name: string;
   description?: string;
   createdAt: Date;
   owner: UserReference;
-  memberEmails: string[];
+  members: EventMember[];
 }
 
 export interface NewEventData {
   name: string;
   description?: string;
   owner: User;
-  memberEmails: string[];
+  members: EventMember[];
 }
 
 export interface Expense {
@@ -77,22 +85,36 @@ export async function createEvent(data: NewEventData) {
     email: data.owner.email,
   };
 
-  const memberEmailsSet = new Set<string>(data.memberEmails);
+  // Agregar el owner como miembro si no está ya incluido
+  const membersSet = new Set<string>();
+  data.members?.forEach((member) => {
+    if (member.email) membersSet.add(member.email);
+  });
 
-  if (ownerRef.email) {
-    memberEmailsSet.add(ownerRef.email);
+  // Agregar el owner como miembro si no está ya incluido
+  if (ownerRef.email && !membersSet.has(ownerRef.email)) {
+    data.members = data.members || [];
+    data.members.push({
+      id: `owner-${Date.now()}`,
+      name: ownerRef.displayName || ownerRef.email,
+      email: ownerRef.email,
+      isRegistered: true,
+    });
   }
 
-  const finalMemberEmails = Array.from(memberEmailsSet).filter(
-    (email) => email && email.includes("@")
-  );
+  const finalMembers = (data.members || []).map((member) => ({
+    id: member.id,
+    name: member.name,
+    email: member.email || null,
+    isRegistered: member.isRegistered || false,
+  }));
 
   const newEvent = {
     name: data.name,
-    description: data.description,
+    description: data.description || null,
     createdAt: serverTimestamp(),
     owner: ownerRef,
-    memberEmails: finalMemberEmails,
+    members: finalMembers,
   };
 
   const docRef = await addDoc(getEventsCollectionRef(), newEvent);
@@ -105,11 +127,9 @@ export async function updateEvent(
   const { eventId, ...updateData } = data;
   const eventRef = doc(db, "events", eventId);
 
-  if (updateData.memberEmails) {
-    const memberEmailsSet = new Set<string>(updateData.memberEmails);
-
-    updateData.memberEmails = Array.from(memberEmailsSet).filter(
-      (email) => email && email.includes("@")
+  if (updateData.members) {
+    updateData.members = updateData.members.filter(
+      (member) => member.email && member.email.includes("@")
     );
   }
 
@@ -135,10 +155,9 @@ export async function getUserEvents(email: string): Promise<Event[]> {
 
   const q1 = query(getEventsCollectionRef(), where("owner.email", "==", email));
 
-  const q2 = query(
-    getEventsCollectionRef(),
-    where("memberEmails", "array-contains", email)
-  );
+  // Para miembros, necesitamos obtener todos los eventos y filtrar
+  // ya que Firestore no soporta consultas complejas en arrays de objetos
+  const q2 = query(getEventsCollectionRef());
 
   const [ownerSnapshot, memberSnapshot] = await Promise.all([
     getDocs(q1),
@@ -158,8 +177,20 @@ export async function getUserEvents(email: string): Promise<Event[]> {
     eventsMap.set(event.id, event);
   };
 
+  // Procesar eventos del owner
   ownerSnapshot.docs.forEach(processDoc);
-  memberSnapshot.docs.forEach(processDoc);
+
+  // Procesar eventos donde el usuario es miembro
+  memberSnapshot.docs.forEach((doc) => {
+    if (!doc.exists()) return;
+    const data = doc.data();
+    const isMember = data.members?.some(
+      (member: any) => member.email === email
+    );
+    if (isMember) {
+      processDoc(doc);
+    }
+  });
 
   const allUserEvents = Array.from(eventsMap.values());
 
@@ -224,4 +255,27 @@ export async function getExpenses(eventId: string): Promise<Expense[]> {
     ...doc.data(),
     createdAt: doc.data().createdAt?.toDate?.() ?? new Date(),
   })) as Expense[];
+}
+
+export async function updateExpense(
+  expenseId: string,
+  updates: Partial<Expense>
+): Promise<void> {
+  // Necesitamos encontrar el evento que contiene este gasto
+  // Por ahora, asumimos que el expenseId incluye el eventId
+  const expenseRef = doc(
+    db,
+    "events",
+    updates.eventId || "",
+    "expenses",
+    expenseId
+  );
+  await updateDoc(expenseRef, updates as Record<string, any>);
+}
+
+export async function deleteExpense(expenseId: string): Promise<void> {
+  // Necesitamos encontrar el evento que contiene este gasto
+  // Por ahora, asumimos que el expenseId incluye el eventId
+  const expenseRef = doc(db, "events", "temp", "expenses", expenseId);
+  await deleteDoc(expenseRef);
 }

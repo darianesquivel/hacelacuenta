@@ -5,6 +5,7 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
+  fetchSignInMethodsForEmail,
 } from "firebase/auth";
 
 import type { User } from "firebase/auth";
@@ -24,4 +25,16 @@ export const signOutUser = (): Promise<void> => {
 
 export const onAuthChangeListener = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
+};
+
+export const checkIfUserIsRegistered = async (
+  email: string
+): Promise<boolean> => {
+  try {
+    const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+    return signInMethods.length > 0;
+  } catch (error) {
+    console.error("Error checking if user is registered:", error);
+    return false;
+  }
 };
