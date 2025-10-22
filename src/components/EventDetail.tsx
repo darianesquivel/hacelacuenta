@@ -17,8 +17,13 @@ import {
   Pencil2Icon,
   PersonIcon,
   UpdateIcon,
+  TrashIcon,
 } from "@radix-ui/react-icons";
-import { useEventDetails, useUpdateEvent } from "../hooks/useEvents";
+import {
+  useEventDetails,
+  useUpdateEvent,
+  useDeleteEvent,
+} from "../hooks/useEvents";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 import ExpenseForm from "./ExpenseForm";
 import EventBalance from "./EventBalance";
@@ -97,6 +102,7 @@ const CopyLinkButton = ({ eventId }: CopyLinkButtonProps) => {
 const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
   const { data: event, isLoading, isError } = useEventDetails(eventId);
   const { mutate: updateEventMutate, isPending: isUpdating } = useUpdateEvent();
+  const { mutate: deleteEventMutate, isPending: isDeleting } = useDeleteEvent();
   const { currentUser } = useAuthStatus();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -169,6 +175,22 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!event) return;
+
+    const confirmMessage = `¿Estás seguro de que quieres eliminar el evento "${event.name}"?\n\nEsta acción eliminará:\n• El evento completo\n• Todos los gastos registrados\n• Todos los datos asociados\n\nEsta acción NO se puede deshacer.`;
+
+    if (confirm(confirmMessage)) {
+      try {
+        await deleteEventMutate(eventId);
+        onBack(); // Volver a la lista después de eliminar
+      } catch (err: any) {
+        console.error("Error al eliminar evento:", err);
+        setEditError(err.message || "Error al eliminar el evento.");
+      }
+    }
+  };
+
   return (
     <Card className="mt-8 p-6">
       <Flex direction="column" gap="4">
@@ -177,15 +199,34 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
             <ArrowLeftIcon width="16" height="16" />
           </IconButton>
           <Heading size="6">{event.name}</Heading>
-          <IconButton
-            onClick={() => setIsEditing(!isEditing)}
-            variant="soft"
-            color="indigo"
-            size="2"
-          >
-            <Pencil2Icon width="16" height="16" />
-          </IconButton>
-          <CopyLinkButton eventId={event.id} />
+          <Flex gap="2">
+            <IconButton
+              onClick={() => setIsEditing(!isEditing)}
+              variant="soft"
+              color="indigo"
+              size="2"
+            >
+              <Pencil2Icon width="16" height="16" />
+            </IconButton>
+            {/* Solo el owner puede eliminar el evento */}
+            {currentUser?.email === event.owner.email && (
+              <IconButton
+                onClick={handleDelete}
+                variant="soft"
+                color="red"
+                size="2"
+                disabled={isDeleting}
+                title={isDeleting ? "Eliminando..." : "Eliminar evento"}
+              >
+                {isDeleting ? (
+                  <Spinner size="1" />
+                ) : (
+                  <TrashIcon width="16" height="16" />
+                )}
+              </IconButton>
+            )}
+            <CopyLinkButton eventId={event.id} />
+          </Flex>
         </Flex>
 
         <Card variant="surface" className="p-4">
@@ -302,7 +343,7 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
                   members: newMembers,
                 });
               }}
-              currentUserEmail={event.owner.email || undefined}
+              currentUserEmail={currentUser?.email || undefined}
               currentUser={currentUser}
               isCreatingEvent={false}
             />
@@ -316,7 +357,7 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
               <ExpensesList
                 eventId={eventId}
                 members={event.members || []}
-                currentUserEmail={event.owner.email || undefined}
+                currentUserEmail={currentUser?.email || undefined}
               />
             </Flex>
           </Tabs.Content>

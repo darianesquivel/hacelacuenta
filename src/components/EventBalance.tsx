@@ -2,6 +2,7 @@ import { Card, Heading, Text, Flex, Spinner, Callout } from "@radix-ui/themes";
 import { useQuery } from "@tanstack/react-query";
 import { getExpenses } from "../api/data";
 import { getBalanceSummary } from "../utils/balanceCalculator";
+import { useAuthStatus } from "../hooks/useAuthStatus";
 
 import type { EventMember } from "../api/data";
 
@@ -19,7 +20,26 @@ const useEventExpenses = (eventId: string) => {
 };
 
 const EventBalance = ({ eventId, members }: EventBalanceProps) => {
+  const { currentUser } = useAuthStatus();
   const { data: expenses, isLoading, isError } = useEventExpenses(eventId);
+
+  // Función para verificar si un miembro está registrado dinámicamente
+  const isMemberRegistered = (member: EventMember): boolean => {
+    // Si el miembro tiene email y coincide con el usuario autenticado actual
+    if (
+      member.email &&
+      currentUser?.email &&
+      member.email === currentUser.email
+    ) {
+      return true;
+    }
+    // Si el miembro tiene email, asumimos que está registrado (puede acceder al evento)
+    if (member.email) {
+      return true;
+    }
+    // Si no tiene email, no está registrado
+    return false;
+  };
 
   if (isLoading) {
     return (
@@ -68,10 +88,16 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
             <Flex direction="column" gap="1">
               <Text weight="medium">{identifier}</Text>
               <Text size="1" color="gray">
-                {members.find((m) => (m.email || m.name) === identifier)
-                  ?.isRegistered
-                  ? "Registrado"
-                  : "Invitado"}
+                {(() => {
+                  const member = members.find(
+                    (m) => (m.email || m.name) === identifier
+                  );
+                  return member
+                    ? isMemberRegistered(member)
+                      ? "Registrado"
+                      : "Invitado"
+                    : "Invitado";
+                })()}
               </Text>
             </Flex>
             {balance < 0 ? (

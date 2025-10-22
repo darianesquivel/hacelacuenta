@@ -4,6 +4,7 @@ import {
   getUserEvents,
   getEventById,
   updateEvent,
+  deleteEvent,
   type NewEventData,
   type Event,
 } from "../api/data";
@@ -57,11 +58,18 @@ export function useUpdateEvent() {
       data: Partial<Omit<Event, "owner" | "createdAt" | "id">> & {
         eventId: string;
       }
-    ) => updateEvent(data),
+    ) => {
+      console.log("Actualizando evento con datos:", data);
+      return updateEvent(data);
+    },
     onSuccess: (updatedEvent) => {
+      console.log("Evento actualizado exitosamente:", updatedEvent);
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["event", updatedEvent.id] });
       console.log(`Evento ${updatedEvent.id} actualizado.`);
+    },
+    onError: (error) => {
+      console.error("Error al actualizar evento:", error);
     },
   });
 }
@@ -79,5 +87,32 @@ export function useEventDetails(eventId: string | null) {
     queryKey: ["event", eventId],
     queryFn: () => getEventById(eventId!),
     enabled: !!eventId,
+  });
+}
+
+export function useDeleteEvent() {
+  const queryClient = useQueryClient();
+  const { currentUser } = useAuthStore();
+
+  return useMutation({
+    mutationFn: (eventId: string) => deleteEvent(eventId),
+    onSuccess: (_, eventId) => {
+      // Invalidar todas las queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["event", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["expenses", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
+
+      if (currentUser?.uid) {
+        queryClient.invalidateQueries({
+          queryKey: ["events", currentUser.uid],
+        });
+      }
+
+      console.log(`Evento ${eventId} eliminado exitosamente`);
+    },
+    onError: (error) => {
+      console.error("Error al eliminar evento:", error);
+    },
   });
 }

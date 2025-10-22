@@ -102,12 +102,20 @@ export async function createEvent(data: NewEventData) {
     });
   }
 
-  const finalMembers = (data.members || []).map((member) => ({
-    id: member.id,
-    name: member.name,
-    email: member.email || null,
-    isRegistered: member.isRegistered || false,
-  }));
+  const finalMembers = (data.members || []).map((member) => {
+    const processedMember: any = {
+      id: member.id,
+      name: member.name,
+      isRegistered: member.isRegistered || false,
+    };
+
+    // Solo agregar email si existe, sino no incluir el campo
+    if (member.email) {
+      processedMember.email = member.email;
+    }
+
+    return processedMember;
+  });
 
   const newEvent = {
     name: data.name,
@@ -127,12 +135,37 @@ export async function updateEvent(
   const { eventId, ...updateData } = data;
   const eventRef = doc(db, "events", eventId);
 
+  console.log("updateEvent - Datos recibidos:", data);
+  console.log("updateEvent - eventId:", eventId);
+  console.log("updateEvent - updateData:", updateData);
+
   if (updateData.members) {
-    updateData.members = updateData.members.filter(
-      (member) => member.email && member.email.includes("@")
+    console.log(
+      "updateEvent - Miembros antes del procesamiento:",
+      updateData.members
+    );
+    // No filtrar miembros, mantener todos los miembros (con o sin email)
+    updateData.members = updateData.members.map((member) => {
+      const processedMember: any = {
+        id: member.id,
+        name: member.name,
+        isRegistered: member.isRegistered || false,
+      };
+
+      // Solo agregar email si existe, sino no incluir el campo
+      if (member.email) {
+        processedMember.email = member.email;
+      }
+
+      return processedMember;
+    });
+    console.log(
+      "updateEvent - Miembros después del procesamiento:",
+      updateData.members
     );
   }
 
+  console.log("updateEvent - Datos finales a guardar:", updateData);
   await updateDoc(eventRef, updateData as Record<string, any>);
 
   const updatedSnapshot = await getDoc(eventRef);
@@ -259,23 +292,57 @@ export async function getExpenses(eventId: string): Promise<Expense[]> {
 
 export async function updateExpense(
   expenseId: string,
-  updates: Partial<Expense>
+  updates: Partial<Expense>,
+  eventId?: string
 ): Promise<void> {
-  // Necesitamos encontrar el evento que contiene este gasto
-  // Por ahora, asumimos que el expenseId incluye el eventId
-  const expenseRef = doc(
-    db,
-    "events",
-    updates.eventId || "",
-    "expenses",
-    expenseId
-  );
+  if (!eventId && !updates.eventId) {
+    throw new Error("Se requiere eventId para actualizar el gasto");
+  }
+
+  const targetEventId = eventId || updates.eventId!;
+  const expenseRef = doc(db, "events", targetEventId, "expenses", expenseId);
+
+  console.log("Actualizando gasto:", {
+    expenseId,
+    updates,
+    eventId: targetEventId,
+  });
+
   await updateDoc(expenseRef, updates as Record<string, any>);
 }
 
-export async function deleteExpense(expenseId: string): Promise<void> {
-  // Necesitamos encontrar el evento que contiene este gasto
-  // Por ahora, asumimos que el expenseId incluye el eventId
-  const expenseRef = doc(db, "events", "temp", "expenses", expenseId);
+export async function deleteExpense(
+  expenseId: string,
+  eventId?: string
+): Promise<void> {
+  if (!eventId) {
+    throw new Error("Se requiere eventId para eliminar el gasto");
+  }
+
+  const expenseRef = doc(db, "events", eventId, "expenses", expenseId);
+  console.log("Eliminando gasto:", { expenseId, eventId });
+
   await deleteDoc(expenseRef);
+}
+
+export async function deleteEvent(eventId: string): Promise<void> {
+  console.log("Eliminando evento:", { eventId });
+
+  // Primero eliminar todos los gastos del evento
+  const expensesSnapshot = await getDocs(
+    collection(db, "events", eventId, "expenses")
+  );
+
+  const deleteExpensesPromises = expensesSnapshot.docs.map((expenseDoc) =>
+    deleteDoc(expenseDoc.ref)
+  );
+
+  await Promise.all(deleteExpensesPromises);
+  console.log(`Eliminados ${expensesSnapshot.docs.length} gastos del evento`);
+
+  // Luego eliminar el evento
+  const eventRef = doc(db, "events", eventId);
+  await deleteDoc(eventRef);
+
+  console.log("Evento eliminado exitosamente");
 }

@@ -65,7 +65,7 @@ const EventsList = () => {
     <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
       <Card className="mt-8 p-6">
         <Flex justify="between" align="center" mb="4">
-          <Heading size="5">Tus Eventos Activos</Heading>
+          <Heading size="5">Tus Eventos</Heading>
           <Dialog.Trigger>
             <Button color="indigo" variant="solid">
               Nuevo Evento

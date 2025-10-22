@@ -55,6 +55,11 @@ const ExpenseEditor = ({
     setSelectedMembers(originalSharedWith);
   }, [expense, members]);
 
+  // Debug: Log cuando cambien los miembros
+  useEffect(() => {
+    console.log("Miembros actualizados en ExpenseEditor:", members);
+  }, [members]);
+
   const handleSave = () => {
     setError(null);
 

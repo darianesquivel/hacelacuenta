@@ -36,7 +36,7 @@ const ExpensesList = ({
     }: {
       expenseId: string;
       updates: Partial<Expense>;
-    }) => updateExpense(expenseId, updates),
+    }) => updateExpense(expenseId, updates, eventId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
@@ -44,7 +44,7 @@ const ExpensesList = ({
   });
 
   const deleteExpenseMutation = useMutation({
-    mutationFn: (expenseId: string) => deleteExpense(expenseId),
+    mutationFn: (expenseId: string) => deleteExpense(expenseId, eventId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });

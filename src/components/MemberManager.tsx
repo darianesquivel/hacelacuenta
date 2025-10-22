@@ -11,6 +11,7 @@ import {
 import { PlusIcon, Cross2Icon } from "@radix-ui/react-icons";
 import { EventMember } from "../api/data";
 import { checkIfUserIsRegistered } from "../api/auth";
+import { useAuthStatus } from "../hooks/useAuthStatus";
 
 interface MemberManagerProps {
   members: EventMember[];
@@ -31,6 +32,23 @@ const MemberManager = ({
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const { currentUser: authUser } = useAuthStatus();
+
+  // Función para verificar si un miembro está registrado dinámicamente
+  const isMemberRegistered = (member: EventMember): boolean => {
+    // Si el miembro tiene email y coincide con el usuario autenticado actual
+    if (member.email && authUser?.email && member.email === authUser.email) {
+      return true;
+    }
+    // Si el miembro tiene email, verificar si está registrado en Firebase
+    if (member.email) {
+      // Si tiene email, asumimos que está registrado (puede acceder al evento)
+      // La verificación real se hace cuando el usuario intenta acceder
+      return true;
+    }
+    // Si no tiene email, no está registrado
+    return false;
+  };
 
   // Agregar automáticamente al creador si no está presente (solo en creación de evento)
   React.useEffect(() => {
@@ -183,8 +201,11 @@ const MemberManager = ({
                     {member.email}
                   </Text>
                 )}
-                <Text size="1" color={member.isRegistered ? "green" : "gray"}>
-                  {member.isRegistered ? "Registrado" : "Invitado"}
+                <Text
+                  size="1"
+                  color={isMemberRegistered(member) ? "green" : "gray"}
+                >
+                  {isMemberRegistered(member) ? "Registrado" : "Invitado"}
                 </Text>
               </Flex>
               {!(member.email && member.email === currentUserEmail) && (
