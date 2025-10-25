@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import AuthGuard from "../layout/AuthGuard";
 import RootLayout from "../layout/RootLayout";
 import Home from "../pages/Home";
-import LoginPage from "../pages/LoginPage";
+import LoginPageV2 from "../pages/LoginPageV2";
 import EventDetailRouteWrapper from "../components/EventDetailRouteWrapper";
 import ErrorBoundary from "../components/ErrorBoundary";
 
@@ -13,7 +13,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/login",
-        element: <LoginPage />,
+        element: <LoginPageV2 />,
       },
       {
         path: "/events/:id",

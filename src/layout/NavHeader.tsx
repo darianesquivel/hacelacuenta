@@ -26,9 +26,7 @@ const NavHeader = () => {
 
   return (
     <header className="shadow-md p-4 flex justify-between items-center sticky top-0 z-10 ">
-      <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-        HacelaCuenta
-      </h1>
+      <img src="/logo.png" alt="HacelaCuenta" width={100} />
 
       <Flex align="center" gap="4">
         <Button

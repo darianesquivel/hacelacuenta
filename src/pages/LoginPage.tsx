@@ -25,23 +25,11 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex">
       <div className="hidden lg:flex lg:w-1/2 from-indigo-600 via-purple-600 to-pink-500 relative overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10 flex flex-col justify-center items-center text-white p-12">
-          <div className="text-center max-w-md">
-            <div className="mb-8">
-              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                </svg>
-              </div>
-              <Heading size="8" weight="bold" className="mb-4">
-                HacelaCuenta
-              </Heading>
-              <Text size="4" className="text-white/90 leading-relaxed">
+        <div className="relative z-10 flex flex-col justify-center items-center p-12">
+          <div className=" max-w-md flex flex-col gap-4">
+            <div className="text-left flex flex-col gap-2">
+              <img src="/logo.png" alt="HacelaCuenta" />
+              <Text size="4" className="text-left">
                 La forma más fácil de dividir gastos entre amigos, familia y
                 compañeros de trabajo.
               </Text>
@@ -49,22 +37,13 @@ const LoginPage = () => {
 
             <div className="space-y-4 text-left">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-white/60 rounded-full"></div>
-                <Text size="3" className="text-white/90">
-                  Divide gastos automáticamente
-                </Text>
+                <Text size="3">Divide gastos automáticamente</Text>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-white/60 rounded-full"></div>
-                <Text size="3" className="text-white/90">
-                  Sugerencias de pagos inteligentes
-                </Text>
+                <Text size="3">Sugerencias de pagos inteligentes</Text>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-white/60 rounded-full"></div>
-                <Text size="3" className="text-white/90">
-                  Seguimiento en tiempo real
-                </Text>
+                <Text size="3">Seguimiento en tiempo real</Text>
               </div>
             </div>
           </div>

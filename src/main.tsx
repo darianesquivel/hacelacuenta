@@ -14,7 +14,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Theme appearance={currentTheme} grayColor="gray">
+      <Theme appearance={currentTheme}>
         <RouterProvider router={router} />
       </Theme>
     </QueryClientProvider>

@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 const RootLayout = () => {
   return (
     <div className="min-h-screen">
-      <NavHeader />
+      {/* <NavHeader /> */}
       <main>
         <Outlet />
       </main>
