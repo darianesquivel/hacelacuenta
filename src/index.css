@@ -1,7 +1,7 @@
 @import "@radix-ui/themes/styles.css";
 @import "tailwindcss";
-@import "./styles/global.css";
 @import "tw-animate-css";
+@import "./styles/global.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -16,9 +16,9 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
+  /* --color-primary: var(--primary); */
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
+  /* --color-secondary: var(--secondary); */
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
