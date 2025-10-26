@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   Heading,
@@ -109,12 +109,19 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
   const { showSuccess, showError } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(event?.name || "");
-  const [description, setDescription] = useState(event?.description || "");
-  const [emailsString, setEmailsString] = useState(
-    event?.members?.map((m) => m.email).join(", ") || ""
-  );
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [emailsString, setEmailsString] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
+
+  // Initialize state when event data is loaded
+  useEffect(() => {
+    if (event && !isEditing) {
+      setName(event.name || "");
+      setDescription(event.description || "");
+      setEmailsString(event.members?.map((m) => m.email).join(", ") || "");
+    }
+  }, [event, isEditing]);
 
   if (isLoading) {
     return (
@@ -139,11 +146,6 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
       </Card>
     );
   }
-
-  if (name === "" && !isEditing) setName(event.name);
-  if (description === "" && !isEditing) setDescription(event.description || "");
-  if (emailsString === "" && !isEditing && event?.members)
-    setEmailsString(event.members.map((m) => m.email).join(", "));
 
   const handleUpdate = async () => {
     setEditError(null);

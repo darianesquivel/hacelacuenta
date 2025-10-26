@@ -1,23 +1,15 @@
-import { useState } from "react";
-import {
-  Card,
-  Heading,
-  Text,
-  Button,
-  Flex,
-  Spinner,
-  Dialog,
-  Link,
-} from "@radix-ui/themes";
+import { Flex, Spinner } from "@radix-ui/themes";
 import { useUserEvents } from "../hooks/useEvents";
 import { useAuthStatus } from "../hooks/useAuthStatus";
-import EventForm from "./EventForm";
-import EventDetail from "./EventDetail";
+import EventCard from "./ui/EventCard";
+import { Badge } from "@radix-ui/themes";
 
-const EventsList = () => {
+interface EventsListProps {
+  onEventClick: (eventId: string) => void;
+}
+
+const EventsList = ({ onEventClick }: EventsListProps) => {
   const { currentUser } = useAuthStatus();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const {
     data: events,
@@ -25,90 +17,42 @@ const EventsList = () => {
     isError,
   } = useUserEvents(currentUser?.email);
 
-  if (selectedEventId) {
-    return (
-      <EventDetail
-        eventId={selectedEventId}
-        onBack={() => setSelectedEventId(null)}
-      />
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <Card className="mt-8 p-6 text-center">
-        <Text size="3">Debes iniciar sesión para ver tus eventos.</Text>
-      </Card>
-    );
-  }
-
   if (isLoadingEvents) {
     return (
-      <Card className="mt-8 p-6 text-center">
-        <Spinner />
-        <Text size="3" className="mt-2 block">
-          Cargando tus eventos...
-        </Text>
-      </Card>
+      <Flex justify="center" align="center">
+        <Badge radius="full" size="3" color="blue">
+          <Spinner /> Cargando tus eventos...
+        </Badge>
+      </Flex>
     );
   }
 
   if (isError) {
     return (
-      <Card className="mt-8 p-6 text-center text-red-500">
-        <Text size="3">Ocurrió un error al cargar los eventos.</Text>
-      </Card>
+      <Flex justify="center" align="center">
+        <Badge radius="full" size="3" color="red">
+          Ocurrió un error al cargar los eventos.
+        </Badge>
+      </Flex>
     );
   }
 
   return (
-    <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
-      <Card className="mt-8 p-6">
-        <Flex justify="between" align="center" mb="4">
-          <Heading size="5">Tus Eventos</Heading>
-          <Dialog.Trigger>
-            <Button color="indigo" variant="solid">
-              Nuevo Evento
-            </Button>
-          </Dialog.Trigger>
+    <>
+      {!events || events.length < 1 ? (
+        <Flex width="100%" align="center" justify="center">
+          <Badge radius="full" size="3" color="red">
+            No tenés eventos creados.
+          </Badge>
         </Flex>
-        {!events || events.length === 0 ? (
-          <Text size="3" color="gray">
-            Aún no tenés eventos creados.
-          </Text>
-        ) : (
-          <Flex direction="column" gap="3">
-            {events.map((event) => (
-              <Card
-                key={event.id}
-                variant="surface"
-                asChild
-                style={{ cursor: "pointer" }}
-              >
-                <Link
-                  onClick={() => setSelectedEventId(event.id)}
-                  style={{ textDecoration: "none" }}
-                >
-                  <Flex direction="column" gap="1">
-                    <Text size="4" weight="medium" color="indigo">
-                      {event.name}
-                    </Text>
-                    <Text size="2" color="gray">
-                      {event.description || "Sin descripción"}
-                    </Text>
-                  </Flex>
-                </Link>
-              </Card>
-            ))}
-          </Flex>
-        )}
-      </Card>
-      <Dialog.Content style={{ maxWidth: 450 }}>
-        <Dialog.Title> Crear Nuevo Evento </Dialog.Title>
-        <Dialog.Description> Completa los datos del evento </Dialog.Description>
-        <EventForm onClose={() => setIsModalOpen(false)} />
-      </Dialog.Content>
-    </Dialog.Root>
+      ) : (
+        <Flex gap="3" width="100%" wrap="wrap">
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} onClick={onEventClick} />
+          ))}
+        </Flex>
+      )}
+    </>
   );
 };
 

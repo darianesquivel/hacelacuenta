@@ -105,15 +105,16 @@ const EventForm = ({ onClose }: EventFormProps) => {
           </Button>
 
           <Button
-            color="indigo"
+            color="green"
             variant="solid"
             type="submit"
             disabled={isPending}
+            loading={isPending}
           >
-            {isPending ? "Creando..." : "Crear Evento"}
+            Crear Evento
           </Button>
         </Flex>
-      </Flex>{" "}
+      </Flex>
     </form>
   );
 };
