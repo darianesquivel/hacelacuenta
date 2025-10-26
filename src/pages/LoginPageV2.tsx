@@ -1,6 +1,5 @@
-import { Text } from "@radix-ui/themes";
 import ThemeButton from "../layout/ThemeButton";
-import { Flex, Button } from "@radix-ui/themes";
+import { Flex, Button, Text } from "@radix-ui/themes";
 
 const LoginPage = () => {
   return (
@@ -15,14 +14,19 @@ const LoginPage = () => {
         <ThemeButton />
       </Flex>
       <Flex direction="column" justify="center" align="center" gap="9">
-        <img src="/logo.png" alt="HacelaCuenta" width={350} />
-        <Flex direction="column" align="center" gap="4">
-          <Text size="6" color="gray" weight="bold" align="center">
-            Juntarse es fácil. Dividir los gastos, ahora también.
+        <img src="/logo.png" alt="HacelaCuenta" className="w-3xs sm:w-sm" />
+        <Flex direction="column" align="center" gap="1">
+          <Text size="6" weight="bold" align="center" className="text-primary">
+            Cuentas claras,
+            <span className="text-secondary"> cero drama.</span>
           </Text>
-          <Text size="3" color="gray" weight="medium" align="center">
-            La forma más fácil de dividir gastos entre amigos, familia y
-            compañeros de trabajo.
+          <Text
+            size="2"
+            weight="medium"
+            align="center"
+            className="text-neutral-500"
+          >
+            Dividí los gastos de juntadas, viajes y salidas, sin complicarte
           </Text>
         </Flex>
       </Flex>
@@ -61,8 +65,7 @@ const LoginPage = () => {
         </Button>
         <Text
           size="2"
-          color="gray"
-          className="text-left"
+          className="text-left text-neutral-500"
           weight="light"
           align="center"
         >
@@ -70,7 +73,12 @@ const LoginPage = () => {
         </Text>
       </Flex>
       <Flex justify="center">
-        <Text size="2" color="gray" weight="light" align="center">
+        <Text
+          size="2"
+          className="text-neutral-400"
+          weight="light"
+          align="center"
+        >
           Derechos de autor © 2025 hacelacuenta. Todos los derechos reservados.
         </Text>
       </Flex>
