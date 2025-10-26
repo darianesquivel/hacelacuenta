@@ -4,11 +4,7 @@ import { useAuthStatus } from "../hooks/useAuthStatus";
 import EventCard from "./ui/EventCard";
 import { Badge } from "@radix-ui/themes";
 
-interface EventsListProps {
-  onEventClick: (eventId: string) => void;
-}
-
-const EventsList = ({ onEventClick }: EventsListProps) => {
+const EventsList = () => {
   const { currentUser } = useAuthStatus();
 
   const {
@@ -48,7 +44,7 @@ const EventsList = ({ onEventClick }: EventsListProps) => {
       ) : (
         <Flex gap="3" width="100%" wrap="wrap">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} onClick={onEventClick} />
+            <EventCard key={event.id} event={event} />
           ))}
         </Flex>
       )}

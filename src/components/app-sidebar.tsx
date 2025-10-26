@@ -7,13 +7,13 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import ThemeButton from "@/components/ThemeButton";
-import LogOutButton from "./LogOutButton";
+import { Flex } from "@radix-ui/themes";
+import UserCard from "./UserCard";
 
 const items = [
   {
@@ -28,7 +28,11 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarHeader>
+            <Flex justify="center" align="center">
+              <img src="/logo.png" alt="HacelaCuenta" className="w-30" />
+            </Flex>
+          </SidebarHeader>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -46,8 +50,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <LogOutButton />
-        <ThemeButton />
+        <UserCard />
       </SidebarFooter>
     </Sidebar>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   Heading,
@@ -34,7 +35,6 @@ import PaymentManager from "./PaymentManager";
 
 interface EventDetailProps {
   eventId: string;
-  onBack: () => void;
 }
 
 interface CopyLinkButtonProps {
@@ -101,12 +101,13 @@ const CopyLinkButton = ({ eventId }: CopyLinkButtonProps) => {
   );
 };
 
-const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
+const EventDetail = ({ eventId }: EventDetailProps) => {
   const { data: event, isLoading, isError } = useEventDetails(eventId);
   const { mutate: updateEventMutate, isPending: isUpdating } = useUpdateEvent();
   const { mutate: deleteEventMutate, isPending: isDeleting } = useDeleteEvent();
   const { currentUser } = useAuthStatus();
   const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState("");
@@ -140,7 +141,7 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
         <Text size="3">
           Ocurrió un error al cargar el evento o el evento no existe.
         </Text>
-        <Button onClick={onBack} mt="3" variant="soft">
+        <Button onClick={() => navigate("/")} mt="3" variant="soft">
           Volver a la Lista
         </Button>
       </Card>
@@ -192,7 +193,7 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
       try {
         await deleteEventMutate(eventId);
         showSuccess(`Evento "${event.name}" eliminado exitosamente`);
-        onBack();
+        navigate("/");
       } catch (err: any) {
         console.error("Error al eliminar evento:", err);
         const errorMessage = err.message || "Error al eliminar el evento.";
@@ -206,7 +207,12 @@ const EventDetail = ({ eventId, onBack }: EventDetailProps) => {
     <Card className="mt-8 p-6">
       <Flex direction="column" gap="4">
         <Flex justify="between" align="center">
-          <IconButton onClick={onBack} variant="soft" color="gray" size="2">
+          <IconButton
+            onClick={() => navigate("/")}
+            variant="soft"
+            color="gray"
+            size="2"
+          >
             <ArrowLeftIcon width="16" height="16" />
           </IconButton>
           <Heading size="6">{event.name}</Heading>

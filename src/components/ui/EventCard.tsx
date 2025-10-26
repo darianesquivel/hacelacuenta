@@ -1,17 +1,23 @@
 import { Card, Text, Flex } from "@radix-ui/themes";
+import { useNavigate } from "react-router-dom";
 import type { Event as EventType } from "@/api/data";
 
 interface EventCardProps {
   event: EventType;
-  onClick: (eventId: string) => void;
 }
 
-const EventCard = ({ event, onClick }: EventCardProps) => {
+const EventCard = ({ event }: EventCardProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/events/${event.id}`);
+  };
+
   return (
     <Card
       key={event.id}
       style={{ cursor: "pointer" }}
-      onClick={() => onClick(event.id)}
+      onClick={handleClick}
       className="w-full max-w-md"
     >
       <Flex direction="column" gap="1">
