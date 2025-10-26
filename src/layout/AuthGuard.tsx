@@ -6,7 +6,7 @@ const AuthGuard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
+      <div className="flex justify-center items-center h-dvh">
         <div className="text-xl font-medium text-indigo-600 animate-pulse">
           Verificando sesión...
         </div>

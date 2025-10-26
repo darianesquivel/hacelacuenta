@@ -1,14 +1,15 @@
-import { Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import NavHeader from "./NavHeader";
 import "react-toastify/dist/ReactToastify.css";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
-const RootLayout = () => {
+const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen">
-      {/* <NavHeader /> */}
+    <SidebarProvider>
+      <AppSidebar />
       <main>
-        <Outlet />
+        <SidebarTrigger />
+        {children}
       </main>
       <ToastContainer
         position="top-right"
@@ -22,8 +23,8 @@ const RootLayout = () => {
         pauseOnHover
         theme="light"
       />
-    </div>
+    </SidebarProvider>
   );
 };
 
-export default RootLayout;
+export default Layout;

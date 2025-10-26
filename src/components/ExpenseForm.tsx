@@ -73,7 +73,6 @@ const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
       return;
     }
 
-    // Encontrar el miembro que pagó
     const paidByMember = members.find((m) => m.id === paidByMemberId);
     if (!paidByMember) {
       setFormError("Error: No se encontró el miembro que pagó.");

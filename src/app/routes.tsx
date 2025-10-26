@@ -1,20 +1,24 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Outlet } from "react-router-dom";
 import AuthGuard from "../layout/AuthGuard";
-import RootLayout from "../layout/RootLayout";
-import Home from "../pages/Home";
-import LoginPageV2 from "../pages/LoginPageV2";
+import LoginPage from "../pages/LoginPage";
 import EventDetailRouteWrapper from "../components/EventDetailRouteWrapper";
+import EventsList from "../components/EventsList";
 import ErrorBoundary from "../components/ErrorBoundary";
+import Layout from "../layout/Layout";
 
 export const router = createBrowserRouter([
   {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
     path: "/",
-    element: <RootLayout />,
+    element: (
+      <Layout>
+        <Outlet />
+      </Layout>
+    ),
     children: [
-      {
-        path: "/login",
-        element: <LoginPageV2 />,
-      },
       {
         path: "/events/:id",
         element: (
@@ -30,7 +34,7 @@ export const router = createBrowserRouter([
             path: "/",
             element: (
               <ErrorBoundary>
-                <Home />
+                <EventsList />
               </ErrorBoundary>
             ),
           },

@@ -1,4 +1,3 @@
-// src/components/EventForm.tsx
 import { useState } from "react";
 import {
   Button,

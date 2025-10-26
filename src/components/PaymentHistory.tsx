@@ -59,17 +59,13 @@ const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
     updatePaymentMutation.mutate({ paymentId, status });
   };
 
-  // Función para verificar si el usuario actual puede confirmar el pago
   const canConfirmPayment = (payment: any) => {
     if (!currentUser) return false;
 
-    // Si el usuario actual es el que debe pagar
     if (payment.fromUser.email === currentUser.email) return true;
 
-    // Si el usuario actual es el que recibe el pago
     if (payment.toUser.email === currentUser.email) return true;
 
-    // Si el usuario actual no tiene email, verificar por nombre
     if (!currentUser.email) {
       const currentUserMember = members.find(
         (m) =>
@@ -80,7 +76,6 @@ const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
       );
 
       if (currentUserMember) {
-        // Verificar si es el que debe pagar o el que recibe
         const fromMember = members.find(
           (m) =>
             (m.email || m.name) ===
