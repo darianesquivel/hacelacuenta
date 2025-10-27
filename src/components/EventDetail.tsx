@@ -191,7 +191,7 @@ const EventDetail = ({ eventId }: EventDetailProps) => {
   };
 
   return (
-    <Card className="mt-8 p-6">
+    <Card className="mt-8 p-6 w-full">
       <Flex direction="column" gap="4">
         <Flex justify="between" align="center">
           <IconButton

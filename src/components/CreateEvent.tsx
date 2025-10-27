@@ -15,7 +15,7 @@ const CreateEvent = () => {
           </Button>
         </Dialog.Trigger>
       </Flex>
-      <Dialog.Content style={{ maxWidth: 450 }}>
+      <Dialog.Content>
         <Dialog.Title> Nuevo Evento </Dialog.Title>
         <Dialog.Description> Completa los datos del evento </Dialog.Description>
         <EventForm onClose={() => setIsModalOpen(false)} />
