@@ -7,9 +7,9 @@ import {
   Callout,
   Spinner,
 } from "@radix-ui/themes";
-import { CheckIcon, Cross2Icon, ClockIcon } from "@radix-ui/react-icons";
+import { CheckIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPayments, updatePaymentStatus } from "../api/data";
+import { getPayments, deletePayment } from "../api/data";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 import { useToast } from "../hooks/useToast";
 import type { EventMember } from "../api/data";
@@ -34,66 +34,27 @@ const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
     enabled: !!eventId,
   });
 
-  const updatePaymentMutation = useMutation({
-    mutationFn: ({
-      paymentId,
-      status,
-    }: {
-      paymentId: string;
-      status: "completed" | "cancelled";
-    }) => updatePaymentStatus(eventId, paymentId, status),
+  const deletePaymentMutation = useMutation({
+    mutationFn: (paymentId: string) => deletePayment(eventId, paymentId),
     onSuccess: () => {
-      showSuccess("Estado del pago actualizado");
+      showSuccess("Pago eliminado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["payments", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
     },
     onError: (error) => {
-      showError(error.message || "Error al actualizar el pago");
+      showError(error.message || "Error al eliminar el pago");
     },
   });
 
-  const handleUpdateStatus = (
-    paymentId: string,
-    status: "completed" | "cancelled"
-  ) => {
-    updatePaymentMutation.mutate({ paymentId, status });
+  const handleDeletePayment = (paymentId: string) => {
+    if (confirm("¿Estás seguro de que quieres eliminar este pago?")) {
+      deletePaymentMutation.mutate(paymentId);
+    }
   };
 
-  const canConfirmPayment = (payment: any) => {
-    if (!currentUser) return false;
-
-    if (payment.fromUser.email === currentUser.email) return true;
-
-    if (payment.toUser.email === currentUser.email) return true;
-
-    if (!currentUser.email) {
-      const currentUserMember = members.find(
-        (m) =>
-          m.email === currentUser.email ||
-          (m.name &&
-            currentUser.displayName &&
-            m.name === currentUser.displayName)
-      );
-
-      if (currentUserMember) {
-        const fromMember = members.find(
-          (m) =>
-            (m.email || m.name) ===
-            (payment.fromUser.email || payment.fromUser.displayName)
-        );
-        const toMember = members.find(
-          (m) =>
-            (m.email || m.name) ===
-            (payment.toUser.email || payment.toUser.displayName)
-        );
-
-        return (
-          currentUserMember === fromMember || currentUserMember === toMember
-        );
-      }
-    }
-
-    return false;
+  const canDeletePayment = (payment: any) => {
+    // Cualquier usuario logueado puede eliminar pagos
+    return !!currentUser;
   };
 
   if (isLoading) {
@@ -117,54 +78,40 @@ const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
       <Card variant="surface" className="p-4">
         <Callout.Root color="gray" size="1">
           <Callout.Text>
-            No hay pagos registrados. ¡Agrega uno desde las sugerencias!
+            No hay pagos registrados. ¡Haz clic en "Pagar" en las sugerencias
+            cuando hayas realizado un pago!
           </Callout.Text>
         </Callout.Root>
       </Card>
     );
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckIcon width="16" height="16" className="text-green-500" />;
-      case "cancelled":
-        return <Cross2Icon width="16" height="16" className="text-red-500" />;
-      default:
-        return <ClockIcon width="16" height="16" className="text-yellow-500" />;
-    }
-  };
+  // Filtrar solo pagos completados
+  const completedPayments = payments.filter(
+    (payment) => payment.status === "completed"
+  );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "green";
-      case "cancelled":
-        return "red";
-      default:
-        return "yellow";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "Completado";
-      case "cancelled":
-        return "Cancelado";
-      default:
-        return "Pendiente";
-    }
-  };
+  if (completedPayments.length === 0) {
+    return (
+      <Card variant="surface" className="p-4">
+        <Callout.Root color="gray" size="1">
+          <Callout.Text>
+            No hay pagos registrados. ¡Haz clic en "Pagar" en las sugerencias
+            cuando hayas realizado un pago!
+          </Callout.Text>
+        </Callout.Root>
+      </Card>
+    );
+  }
 
   return (
     <Card variant="surface" className="p-4">
       <Heading size="3" mb="3">
-        📋 Historial de Pagos
+        📋 Pagos Realizados
       </Heading>
 
       <Flex direction="column" gap="3">
-        {payments.map((payment) => (
+        {completedPayments.map((payment) => (
           <Card key={payment.id} variant="classic" className="p-3">
             <Flex justify="between" align="center">
               <Flex direction="column" gap="1">
@@ -190,43 +137,27 @@ const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
                 </Text>
 
                 <Flex align="center" gap="1">
-                  {getStatusIcon(payment.status)}
-                  <Text size="1" color={getStatusColor(payment.status)}>
-                    {getStatusText(payment.status)}
+                  <CheckIcon
+                    width="16"
+                    height="16"
+                    className="text-green-500"
+                  />
+                  <Text size="1" color="green">
+                    Pagado
                   </Text>
                 </Flex>
 
-                {payment.status === "pending" && canConfirmPayment(payment) && (
-                  <Flex gap="1">
-                    <Button
-                      size="1"
-                      color="green"
-                      onClick={() =>
-                        handleUpdateStatus(payment.id, "completed")
-                      }
-                      disabled={updatePaymentMutation.isPending}
-                    >
-                      <CheckIcon width="16" height="16" />
-                      {payment.fromUser.email === currentUser?.email ||
-                      (payment.fromUser.displayName &&
-                        currentUser?.displayName ===
-                          payment.fromUser.displayName)
-                        ? "Pagado"
-                        : "Recibido"}
-                    </Button>
-                    <Button
-                      size="1"
-                      color="red"
-                      variant="soft"
-                      onClick={() =>
-                        handleUpdateStatus(payment.id, "cancelled")
-                      }
-                      disabled={updatePaymentMutation.isPending}
-                    >
-                      <Cross2Icon width="16" height="16" />
-                      Cancelar
-                    </Button>
-                  </Flex>
+                {canDeletePayment(payment) && (
+                  <Button
+                    size="1"
+                    color="red"
+                    variant="soft"
+                    onClick={() => handleDeletePayment(payment.id)}
+                    disabled={deletePaymentMutation.isPending}
+                  >
+                    <TrashIcon width="16" height="16" />
+                    Eliminar
+                  </Button>
                 )}
               </Flex>
             </Flex>

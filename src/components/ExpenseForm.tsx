@@ -20,9 +20,10 @@ import type { EventMember } from "../api/data";
 interface ExpenseFormProps {
   eventId: string;
   members: EventMember[];
+  onClose?: () => void;
 }
 
-const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
+const ExpenseForm = ({ eventId, members, onClose }: ExpenseFormProps) => {
   const { currentUser } = useAuthStatus();
   const { showSuccess, showError } = useToast();
   const { invalidateExpenseQueries } = useQueryInvalidation();
@@ -42,6 +43,7 @@ const ExpenseForm = ({ eventId, members }: ExpenseFormProps) => {
       setFormError(null);
       showSuccess(MESSAGES.SUCCESS.EXPENSE_ADDED);
       invalidateExpenseQueries(eventId);
+      onClose?.();
     },
     onError: (error) => {
       console.error("Error al agregar gasto:", error);

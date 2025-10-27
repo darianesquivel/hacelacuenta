@@ -1,6 +1,11 @@
 import { Flex, Spinner, Callout, Heading } from "@radix-ui/themes";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getExpenses, updateExpense, deleteExpense } from "../api/data";
+import {
+  getExpenses,
+  updateExpense,
+  deleteExpense,
+  hasPayments,
+} from "../api/data";
 import { useToast } from "../hooks/useToast";
 import ExpenseEditor from "./ExpenseEditor";
 import type { EventMember, Expense } from "../api/data";
@@ -48,13 +53,31 @@ const ExpensesList = ({
   });
 
   const deleteExpenseMutation = useMutation({
-    mutationFn: (expenseId: string) => deleteExpense(expenseId, eventId),
+    mutationFn: async (expenseId: string) => {
+      // Verificar si hay pagos antes de eliminar
+      const hasExistingPayments = await hasPayments(eventId);
+
+      if (hasExistingPayments) {
+        const confirmMessage = `⚠️ ADVERTENCIA: Hay pagos registrados en este evento.\n\nAl eliminar este gasto, los balances pueden quedar inconsistentes.\n\n¿Estás seguro de que quieres continuar?\n\nRecomendación: Revisa los pagos en la pestaña "Pagos" antes de eliminar gastos.`;
+
+        if (!confirm(confirmMessage)) {
+          throw new Error("Eliminación cancelada por el usuario");
+        }
+      }
+
+      return deleteExpense(expenseId, eventId);
+    },
     onSuccess: () => {
       showSuccess("Gasto eliminado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["expenses", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["payments", eventId] });
     },
     onError: (error) => {
+      if (error.message === "Eliminación cancelada por el usuario") {
+        // No mostrar error si el usuario canceló
+        return;
+      }
       showError(error.message || "Error al eliminar el gasto");
     },
   });
@@ -89,7 +112,6 @@ const ExpensesList = ({
 
   return (
     <Flex direction="column" gap="3">
-      <Heading size="3">Gastos Registrados</Heading>
       {expenses.map((expense) => (
         <ExpenseEditor
           key={expense.id}

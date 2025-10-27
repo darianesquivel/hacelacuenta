@@ -20,15 +20,23 @@ export const getBalanceSummary = (
       return;
     }
 
-    const shareAmount = expense.amount / sharedWithIdentifiers.length;
+    // Calcular distribución inteligente para evitar centavos perdidos
+    const totalAmount = expense.amount;
+    const shareCount = sharedWithIdentifiers.length;
+    const baseShare = Math.floor((totalAmount * 100) / shareCount) / 100; // Redondear hacia abajo
+    const remainder = Math.round((totalAmount - baseShare * shareCount) * 100); // Centavos restantes
 
     const currentPaidByBalance = balances.get(paidByIdentifier) || 0;
     balances.set(paidByIdentifier, currentPaidByBalance + expense.amount);
 
-    sharedWithIdentifiers.forEach((sharedIdentifier) => {
+    sharedWithIdentifiers.forEach((sharedIdentifier, index) => {
       if (sharedIdentifier) {
+        // Los primeros 'remainder' miembros reciben un centavo extra
+        const extraCent = index < remainder ? 0.01 : 0;
+        const finalShare = baseShare + extraCent;
+
         const currentSharedBalance = balances.get(sharedIdentifier) || 0;
-        balances.set(sharedIdentifier, currentSharedBalance - shareAmount);
+        balances.set(sharedIdentifier, currentSharedBalance - finalShare);
       }
     });
   });

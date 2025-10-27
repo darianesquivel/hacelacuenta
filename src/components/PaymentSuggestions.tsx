@@ -27,15 +27,16 @@ const PaymentSuggestions = ({
         toUser: suggestion.toUser,
         amount: suggestion.amount,
         description: suggestion.reason,
+        status: "completed", // Marcar como completado directamente
       }),
     onSuccess: () => {
-      showSuccess("Pago agregado exitosamente");
+      showSuccess("Pago registrado exitosamente");
       queryClient.invalidateQueries({ queryKey: ["payments", eventId] });
       queryClient.invalidateQueries({ queryKey: ["eventBalance", eventId] });
       onPaymentAdded?.();
     },
     onError: (error) => {
-      showError(error.message || "Error al agregar el pago");
+      showError(error.message || "Error al registrar el pago");
     },
   });
 
@@ -62,7 +63,8 @@ const PaymentSuggestions = ({
         💡 Sugerencias de Pago
       </Heading>
       <Text size="2" color="gray" mb="4">
-        Para equilibrar las cuentas, se sugieren los siguientes pagos:
+        Para equilibrar las cuentas, haz clic en "Pagar" cuando hayas realizado
+        el pago:
       </Text>
 
       <Flex direction="column" gap="3">
@@ -90,9 +92,7 @@ const PaymentSuggestions = ({
                   disabled={addPaymentMutation.isPending}
                 >
                   <CheckIcon width="16" height="16" />
-                  {addPaymentMutation.isPending
-                    ? "Agregando..."
-                    : "Agregar Pago"}
+                  {addPaymentMutation.isPending ? "Registrando..." : "Pagar"}
                 </Button>
               </Flex>
             </Flex>

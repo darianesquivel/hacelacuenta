@@ -27,13 +27,14 @@ import {
 } from "../hooks/useEvents";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 import { useToast } from "../hooks/useToast";
-import ExpenseForm from "./ExpenseForm";
 import EventBalance from "./EventBalance";
-import MemberManager from "./MemberManager";
 import ExpensesList from "./ExpensesList";
 import PaymentManager from "./PaymentManager";
 import LoadingState from "./ui/LoadingState";
 import ErrorState from "./ui/ErrorState";
+import CreateExpense from "./CreateExpense";
+import AddMember from "./AddMember";
+import MembersList from "./MembersList";
 
 interface EventDetailProps {
   eventId: string;
@@ -339,24 +340,49 @@ const EventDetail = ({ eventId }: EventDetailProps) => {
           </Tabs.List>
 
           <Tabs.Content value="members">
-            <MemberManager
-              members={event.members || []}
-              onMembersChange={(newMembers) => {
-                updateEventMutate({
-                  eventId: event.id,
-                  members: newMembers,
-                });
-              }}
-              currentUserEmail={currentUser?.email || undefined}
-              currentUser={currentUser}
-              isCreatingEvent={false}
-            />
+            <Flex direction="column" gap="4">
+              <Flex justify="between" align="center" pt="4">
+                <Heading size="4">Miembros del Evento</Heading>
+                <AddMember
+                  onMemberAdded={(newMember) => {
+                    const updatedMembers = [
+                      ...(event.members || []),
+                      newMember,
+                    ];
+                    updateEventMutate({
+                      eventId: event.id,
+                      members: updatedMembers,
+                    });
+                  }}
+                  existingMembers={event.members || []}
+                />
+              </Flex>
+
+              <MembersList
+                members={event.members || []}
+                onMemberRemoved={(memberId) => {
+                  const updatedMembers = (event.members || []).filter(
+                    (m) => m.id !== memberId
+                  );
+                  updateEventMutate({
+                    eventId: event.id,
+                    members: updatedMembers,
+                  });
+                }}
+                currentUserEmail={currentUser?.email || undefined}
+              />
+            </Flex>
           </Tabs.Content>
 
           <Tabs.Content value="expenses">
-            <Flex direction="column" gap="4">
-              <Heading size="4">Agregar Nuevo Gasto</Heading>
-              <ExpenseForm eventId={eventId} members={event.members || []} />
+            <Flex direction="column" gap="4" pt="4">
+              <Flex justify="between" align="center">
+                <Heading size="4">Gastos del Evento</Heading>
+                <CreateExpense
+                  eventId={eventId}
+                  members={event.members || []}
+                />
+              </Flex>
 
               <ExpensesList
                 eventId={eventId}

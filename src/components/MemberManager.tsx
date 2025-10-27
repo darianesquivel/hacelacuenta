@@ -10,8 +10,6 @@ import {
 } from "@radix-ui/themes";
 import { PlusIcon, Cross2Icon } from "@radix-ui/react-icons";
 import type { EventMember } from "../api/data";
-import { checkIfUserIsRegistered } from "../api/auth";
-import { useAuthStatus } from "../hooks/useAuthStatus";
 import { useToast } from "../hooks/useToast";
 
 interface MemberManagerProps {
@@ -33,18 +31,7 @@ const MemberManager = ({
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const { currentUser: authUser } = useAuthStatus();
   const { showSuccess } = useToast();
-
-  const isMemberRegistered = (member: EventMember): boolean => {
-    if (member.email && authUser?.email && member.email === authUser.email) {
-      return true;
-    }
-    if (member.email) {
-      return true;
-    }
-    return false;
-  };
 
   useEffect(() => {
     if (
@@ -95,20 +82,11 @@ const MemberManager = ({
         return;
       }
 
-      let isRegistered = false;
-      if (newMemberEmail) {
-        try {
-          isRegistered = await checkIfUserIsRegistered(newMemberEmail);
-        } catch (error) {
-          console.error("Error verificando usuario:", error);
-        }
-      }
-
       const newMember: EventMember = {
         id: Date.now().toString(),
         name: newMemberName.trim(),
         email: newMemberEmail.trim() || undefined,
-        isRegistered,
+        isRegistered: false, // Simplificado: siempre false
       };
 
       onMembersChange([...members, newMember]);
@@ -196,12 +174,6 @@ const MemberManager = ({
                     {member.email}
                   </Text>
                 )}
-                <Text
-                  size="1"
-                  color={isMemberRegistered(member) ? "green" : "gray"}
-                >
-                  {isMemberRegistered(member) ? "Registrado" : "Invitado"}
-                </Text>
               </Flex>
               {!(member.email && member.email === currentUserEmail) && (
                 <IconButton

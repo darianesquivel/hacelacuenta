@@ -319,6 +319,12 @@ export async function updateExpense(
   await updateDoc(expenseRef, updates as Record<string, any>);
 }
 
+export async function hasPayments(eventId: string): Promise<boolean> {
+  const paymentsRef = collection(db, "events", eventId, "payments");
+  const snapshot = await getDocs(paymentsRef);
+  return snapshot.docs.length > 0;
+}
+
 export async function deleteExpense(
   expenseId: string,
   eventId?: string
@@ -339,6 +345,7 @@ export async function addPayment(data: {
   toUser: UserReference;
   amount: number;
   description?: string;
+  status?: "pending" | "completed" | "cancelled";
 }): Promise<string> {
   const paymentRef = collection(db, "events", data.eventId, "payments");
 
@@ -349,7 +356,7 @@ export async function addPayment(data: {
     amount: data.amount,
     description: data.description,
     createdAt: serverTimestamp() as unknown as Date,
-    status: "pending",
+    status: data.status || "pending",
   };
 
   const docRef = await addDoc(paymentRef, newPayment);
@@ -363,6 +370,14 @@ export async function updatePaymentStatus(
 ): Promise<void> {
   const paymentRef = doc(db, "events", eventId, "payments", paymentId);
   await updateDoc(paymentRef, { status });
+}
+
+export async function deletePayment(
+  eventId: string,
+  paymentId: string
+): Promise<void> {
+  const paymentRef = doc(db, "events", eventId, "payments", paymentId);
+  await deleteDoc(paymentRef);
 }
 
 export async function getPayments(eventId: string): Promise<Payment[]> {
@@ -382,8 +397,19 @@ export function calculatePaymentSuggestions(
 ): PaymentSuggestion[] {
   const suggestions: PaymentSuggestion[] = [];
 
-  const debtors = balances.filter(([, balance]) => balance < 0);
-  const creditors = balances.filter(([, balance]) => balance > 0);
+  // Función para redondear balances de manera inteligente
+  const roundBalance = (balance: number): number => {
+    return Math.abs(balance) < 0.01 ? 0 : Math.round(balance * 100) / 100;
+  };
+
+  // Aplicar redondeo inteligente a todos los balances
+  const roundedBalances = balances.map(([identifier, balance]) => [
+    identifier,
+    roundBalance(balance),
+  ]) as Array<[string, number]>;
+
+  const debtors = roundedBalances.filter(([, balance]) => balance < 0);
+  const creditors = roundedBalances.filter(([, balance]) => balance > 0);
 
   debtors.sort(([, a], [, b]) => a - b);
   creditors.sort(([, a], [, b]) => b - a);
@@ -410,7 +436,11 @@ export function calculatePaymentSuggestions(
 
     const paymentAmount = Math.min(Math.abs(debtorBalance), creditorBalance);
 
-    if (paymentAmount > 0.01) {
+    // Redondear a centavos para evitar decimales largos
+    const roundedAmount = Math.round(paymentAmount * 100) / 100;
+
+    if (roundedAmount > 0.005) {
+      // Reducir umbral para incluir más casos
       suggestions.push({
         fromUser: {
           uid: debtorMember.email || "guest",
@@ -424,13 +454,13 @@ export function calculatePaymentSuggestions(
           photoURL: null,
           email: creditorMember.email || null,
         },
-        amount: paymentAmount,
+        amount: roundedAmount,
         reason: `Pago para equilibrar cuentas`,
       });
     }
 
-    debtors[debtorIndex][1] += paymentAmount;
-    creditors[creditorIndex][1] -= paymentAmount;
+    debtors[debtorIndex][1] += roundedAmount;
+    creditors[creditorIndex][1] -= roundedAmount;
 
     if (Math.abs(debtors[debtorIndex][1]) < 0.01) debtorIndex++;
     if (Math.abs(creditors[creditorIndex][1]) < 0.01) creditorIndex++;

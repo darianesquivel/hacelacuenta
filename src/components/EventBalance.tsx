@@ -33,18 +33,9 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
     enabled: !!eventId,
   });
 
-  const isMemberRegistered = (member: EventMember): boolean => {
-    if (
-      member.email &&
-      currentUser?.email &&
-      member.email === currentUser.email
-    ) {
-      return true;
-    }
-    if (member.email) {
-      return true;
-    }
-    return false;
+  const isEventCreator = (member: EventMember): boolean => {
+    // Solo mostrar si es el creador del evento
+    return member.email === currentUser?.email;
   };
 
   if (isLoading || paymentsLoading) {
@@ -73,6 +64,12 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
     );
   }
 
+  // Función para redondear balances de manera inteligente
+  const roundBalance = (balance: number): number => {
+    // Si el balance está muy cerca de 0 (menos de 0.01), considerarlo como 0
+    return Math.abs(balance) < 0.01 ? 0 : Math.round(balance * 100) / 100;
+  };
+
   const memberEmails = members.map((m) => m.email || m.name);
   const summary = getBalanceSummary(expenses, memberEmails, payments);
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -86,40 +83,42 @@ const EventBalance = ({ eventId, members }: EventBalanceProps) => {
 
       <Heading size="3">Saldos Individuales</Heading>
 
-      {summary.map(([identifier, balance]) => (
-        <Card key={identifier} variant="surface">
-          <Flex justify="between" align="center">
-            <Flex direction="column" gap="1">
-              <Text weight="medium">{identifier}</Text>
-              <Text size="1" color="gray">
-                {(() => {
-                  const member = members.find(
-                    (m) => (m.email || m.name) === identifier
-                  );
-                  return member
-                    ? isMemberRegistered(member)
-                      ? "Registrado"
-                      : "Invitado"
-                    : "Invitado";
-                })()}
-              </Text>
+      {summary.map(([identifier, balance]) => {
+        const roundedBalance = roundBalance(balance);
+
+        return (
+          <Card key={identifier} variant="surface">
+            <Flex justify="between" align="center">
+              <Flex direction="column" gap="1">
+                <Text weight="medium">{identifier}</Text>
+                <Text size="1" color="gray">
+                  {(() => {
+                    const member = members.find(
+                      (m) => (m.email || m.name) === identifier
+                    );
+                    return member && isEventCreator(member)
+                      ? "Creador del evento"
+                      : "";
+                  })()}
+                </Text>
+              </Flex>
+              {roundedBalance < 0 ? (
+                <Text color="red" weight="bold">
+                  Debe: ${Math.abs(roundedBalance).toFixed(2)}
+                </Text>
+              ) : roundedBalance > 0 ? (
+                <Text color="green" weight="bold">
+                  A su favor: ${roundedBalance.toFixed(2)}
+                </Text>
+              ) : (
+                <Text color="gray" weight="bold">
+                  Saldado
+                </Text>
+              )}
             </Flex>
-            {balance < 0 ? (
-              <Text color="red" weight="bold">
-                Debe: ${Math.abs(balance).toFixed(2)}
-              </Text>
-            ) : balance > 0 ? (
-              <Text color="green" weight="bold">
-                A su favor: ${balance.toFixed(2)}
-              </Text>
-            ) : (
-              <Text color="gray" weight="bold">
-                Saldado
-              </Text>
-            )}
-          </Flex>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </Flex>
   );
 };
