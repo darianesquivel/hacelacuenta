@@ -7,6 +7,7 @@ import {
   Flex,
   IconButton,
   Callout,
+  Badge,
 } from "@radix-ui/themes";
 import { Pencil2Icon, TrashIcon } from "@radix-ui/react-icons";
 import type { EventMember, Expense } from "../api/data";
@@ -211,12 +212,20 @@ const ExpenseEditor = ({
         <Flex direction="column" gap="1" style={{ flex: 1 }}>
           <Text weight="medium">{expense.description}</Text>
           <Text size="2" color="gray">
-            ${expense.amount.toFixed(2)} - Pagado por:{" "}
-            {expense.paidBy.displayName}
+            ${expense.amount.toFixed(2)} - Pagado por:
+            <Badge color="blue" radius="full">
+              {expense.paidBy.displayName}
+            </Badge>
           </Text>
           <Text size="1" color="gray">
-            Repartido entre:{" "}
-            {expense.sharedWith.map((sw) => sw.displayName).join(", ")}
+            Repartido entre:
+            <Flex gap="2" pt="1">
+              {expense.sharedWith.map((sw) => (
+                <Badge color="blue" radius="full">
+                  {sw.displayName}
+                </Badge>
+              ))}
+            </Flex>
           </Text>
         </Flex>
         <Flex gap="1">
