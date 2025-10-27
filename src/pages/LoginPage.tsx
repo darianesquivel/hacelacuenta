@@ -5,7 +5,7 @@ import { useAuthStore } from "../store/authStore";
 import { useEffect } from "react";
 
 const LoginPage = () => {
-  const { signIn, isLoading, error, currentUser } = useAuthStore();
+  const { signIn, isLoading, currentUser } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { Flex, Spinner, Callout, Heading } from "@radix-ui/themes";
+import { Flex, Spinner, Callout } from "@radix-ui/themes";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getExpenses,

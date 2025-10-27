@@ -19,7 +19,7 @@ interface PaymentHistoryProps {
   members?: EventMember[];
 }
 
-const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
+const PaymentHistory = ({ eventId }: PaymentHistoryProps) => {
   const { currentUser } = useAuthStatus();
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useToast();
@@ -52,7 +52,7 @@ const PaymentHistory = ({ eventId, members = [] }: PaymentHistoryProps) => {
     }
   };
 
-  const canDeletePayment = (payment: any) => {
+  const canDeletePayment = () => {
     // Cualquier usuario logueado puede eliminar pagos
     return !!currentUser;
   };

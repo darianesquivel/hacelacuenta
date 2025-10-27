@@ -2,7 +2,7 @@ import { Flex, Spinner, Text } from "@radix-ui/themes";
 
 interface LoadingSpinnerProps {
   message?: string;
-  size?: "1" | "2" | "3" | "4";
+  size?: "1" | "2" | "3";
 }
 
 export const LoadingSpinner = ({

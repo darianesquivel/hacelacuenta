@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Flex, Dialog } from "@radix-ui/themes";
+import { Button, Dialog } from "@radix-ui/themes";
 import AddMemberForm from "./AddMemberForm";
 import { PlusIcon } from "lucide-react";
 import type { EventMember } from "../api/data";
