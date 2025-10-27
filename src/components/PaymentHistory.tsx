@@ -147,7 +147,7 @@ const PaymentHistory = ({ eventId }: PaymentHistoryProps) => {
                   </Text>
                 </Flex>
 
-                {canDeletePayment(payment) && (
+                {canDeletePayment() && (
                   <Button
                     size="1"
                     color="red"
