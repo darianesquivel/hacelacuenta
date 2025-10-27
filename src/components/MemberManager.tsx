@@ -167,10 +167,11 @@ const MemberManager = ({
             onClick={addMember}
             color="green"
             disabled={isAdding}
+            loading={isAdding}
             type="button"
           >
             <PlusIcon width="16" height="16" />
-            {isAdding ? "Verificando..." : "Agregar"}
+            Agregar
           </Button>
         </Flex>
         <Text size="1" color="gray">

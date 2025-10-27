@@ -1,8 +1,10 @@
-import { Flex, Spinner } from "@radix-ui/themes";
+import { Flex } from "@radix-ui/themes";
 import { useUserEvents } from "../hooks/useEvents";
 import { useAuthStatus } from "../hooks/useAuthStatus";
 import EventCard from "./ui/EventCard";
-import { Badge } from "@radix-ui/themes";
+import LoadingState from "./ui/LoadingState";
+import ErrorState from "./ui/ErrorState";
+import { EmptyState } from "./ui/EmptyState";
 
 const EventsList = () => {
   const { currentUser } = useAuthStatus();
@@ -14,33 +16,17 @@ const EventsList = () => {
   } = useUserEvents(currentUser?.email);
 
   if (isLoadingEvents) {
-    return (
-      <Flex justify="center" align="center">
-        <Badge radius="full" size="3" color="blue">
-          <Spinner /> Cargando tus eventos...
-        </Badge>
-      </Flex>
-    );
+    return <LoadingState message="Cargando tus eventos..." />;
   }
 
   if (isError) {
-    return (
-      <Flex justify="center" align="center">
-        <Badge radius="full" size="3" color="red">
-          Ocurrió un error al cargar los eventos.
-        </Badge>
-      </Flex>
-    );
+    return <ErrorState message="Ocurrió un error al cargar los eventos." />;
   }
 
   return (
     <>
       {!events || events.length < 1 ? (
-        <Flex width="100%" align="center" justify="center">
-          <Badge radius="full" size="3" color="red">
-            No tenés eventos creados.
-          </Badge>
-        </Flex>
+        <EmptyState message="No tenés eventos creados." />
       ) : (
         <Flex gap="3" width="100%" wrap="wrap">
           {events.map((event) => (

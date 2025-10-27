@@ -1,15 +1,17 @@
 import { Flex, Badge } from "@radix-ui/themes";
 
-interface EmptyStateProps {
+interface ErrorStateProps {
   message: string;
 }
 
-export const EmptyState = ({ message }: EmptyStateProps) => {
+const ErrorState = ({ message }: ErrorStateProps) => {
   return (
-    <Flex width="100%" align="center" justify="center">
+    <Flex justify="center" align="center">
       <Badge radius="full" size="3" color="red">
         {message}
       </Badge>
     </Flex>
   );
 };
+
+export default ErrorState;

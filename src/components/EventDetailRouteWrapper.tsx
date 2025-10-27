@@ -2,8 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getEventById } from "../api/data";
 import { useAuthStatus } from "../hooks/useAuthStatus";
-import { Card, Text, Spinner, Button } from "@radix-ui/themes";
+import { Button, Flex } from "@radix-ui/themes";
 import EventDetail from "./EventDetail";
+import LoadingState from "./ui/LoadingState";
+import ErrorState from "./ui/ErrorState";
 
 const EventDetailRouteWrapper = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,33 +28,22 @@ const EventDetailRouteWrapper = () => {
 
   if (!id) {
     return (
-      <Card className="mt-8 p-6 text-center text-red-500">
-        <Text size="3">Error: ID de evento no encontrado en la URL.</Text>
-      </Card>
+      <ErrorState message="Error: ID de evento no encontrado en la URL." />
     );
   }
 
   if (isLoading) {
-    return (
-      <Card className="mt-8 p-6 text-center">
-        <Spinner />
-        <Text size="3" className="mt-2 block">
-          Cargando evento...
-        </Text>
-      </Card>
-    );
+    return <LoadingState message="Cargando evento..." />;
   }
 
   if (isError || !event) {
     return (
-      <Card className="mt-8 p-6 text-center text-red-500">
-        <Text size="3">
-          No se pudo cargar el evento o no tienes permisos para verlo.
-        </Text>
+      <Flex direction="column" gap="1" align="center">
+        <ErrorState message="No se pudo cargar el evento o no tienes permisos para verlo." />
         <Button onClick={handleBack} mt="3" variant="soft">
           Volver
         </Button>
-      </Card>
+      </Flex>
     );
   }
 
@@ -64,15 +55,12 @@ const EventDetailRouteWrapper = () => {
 
   if (!hasAccess) {
     return (
-      <Card className="mt-8 p-6 text-center text-red-500">
-        <Text size="3">No tienes permisos para ver este evento.</Text>
-        <Text size="2" color="gray" className="mt-2 block">
-          Solo los miembros del evento pueden acceder.
-        </Text>
+      <Flex direction="column" gap="1" align="center">
+        <ErrorState message="Solo los miembros del evento pueden acceder." />
         <Button onClick={handleBack} mt="3" variant="soft">
           Volver
         </Button>
-      </Card>
+      </Flex>
     );
   }
 

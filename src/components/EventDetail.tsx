@@ -32,6 +32,8 @@ import EventBalance from "./EventBalance";
 import MemberManager from "./MemberManager";
 import ExpensesList from "./ExpensesList";
 import PaymentManager from "./PaymentManager";
+import LoadingState from "./ui/LoadingState";
+import ErrorState from "./ui/ErrorState";
 
 interface EventDetailProps {
   eventId: string;
@@ -115,7 +117,6 @@ const EventDetail = ({ eventId }: EventDetailProps) => {
   const [emailsString, setEmailsString] = useState("");
   const [editError, setEditError] = useState<string | null>(null);
 
-  // Initialize state when event data is loaded
   useEffect(() => {
     if (event && !isEditing) {
       setName(event.name || "");
@@ -125,26 +126,12 @@ const EventDetail = ({ eventId }: EventDetailProps) => {
   }, [event, isEditing]);
 
   if (isLoading) {
-    return (
-      <Card className="mt-8 p-6 text-center">
-        <Flex direction="column" gap="3" align="center">
-          <Spinner size="3" />
-          <Text size="3">Cargando detalles del evento...</Text>
-        </Flex>
-      </Card>
-    );
+    return <LoadingState message="Cargando detalles del evento..." />;
   }
 
   if (isError || !event) {
     return (
-      <Card className="mt-8 p-6 text-center text-red-500">
-        <Text size="3">
-          Ocurrió un error al cargar el evento o el evento no existe.
-        </Text>
-        <Button onClick={() => navigate("/")} mt="3" variant="soft">
-          Volver a la Lista
-        </Button>
-      </Card>
+      <ErrorState message="Ocurrió un error al cargar el evento o el evento no existe." />
     );
   }
 
